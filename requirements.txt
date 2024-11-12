@@ -1,5 +1,4 @@
 openai~=1.54.3
-chromadb~=0.5.18
 sentence-transformers~=3.3.0
 PyYAML~=6.0.2
 faiss_cpu
@@ -75,7 +74,6 @@ tenacity~=9.0.0
 bcrypt~=4.2.0
 kubernetes~=31.0.0
 mmh3~=5.0.1
-chroma-hnswlib~=0.7.6
 networkx~=3.4.2
 oauthlib~=3.2.2
 Deprecated~=1.2.14
