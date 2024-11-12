@@ -1,0 +1,8 @@
+model:
+  type: "openai"
+  api_key: "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"
+  temperature: 0.7
+
+retriever:
+  type: "chroma"  # Options: "chroma", "faiss"
+  persist_path: "./vector_data"
