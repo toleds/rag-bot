@@ -1,13 +1,16 @@
 import yaml
 
+
 class VectorStoreConfig:
     def __init__(self, vector_type: str, persist_directory: str):
         self.vector_type = vector_type
         self.persist_directory = persist_directory
 
-class OpenApiConfig:
-    def __init__(self, api_key: str, temperature: float):
-        self.api_key = api_key
+class LlmConfig:
+    def __init__(self, llm: str, openapi_key: str, hugging_face_key: str, temperature: float):
+        self.llm = llm
+        self.openapi_key = openapi_key
+        self.hugging_face_key = hugging_face_key
         self.temperature = temperature
 
 class Embeddings:
@@ -15,9 +18,9 @@ class Embeddings:
         self.embedding_model =  embedding_model
 
 class AppConfig:
-    def __init__(self, vector_store: dict, openapi: dict, embeddings: dict):
+    def __init__(self, vector_store: dict, llms: dict, embeddings: dict):
         self.vector_store = VectorStoreConfig(**vector_store)
-        self.openapi = OpenApiConfig(**openapi)
+        self.llms = LlmConfig(**llms)
         self.embeddings = Embeddings(**embeddings)
 
     @staticmethod

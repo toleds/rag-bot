@@ -1,6 +1,8 @@
-openapi:
-  api_key: "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"
-  temperature: 0.7
+llms:
+  llm: "huggingface" # openapi, huggingface
+  openapi_key: "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"
+  hugging_face_key: "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"
+  temperature: 0.01
 
 vector_store:
   vector_type: "faiss"  # Options: "chroma", "faiss"

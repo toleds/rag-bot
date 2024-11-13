@@ -1,32 +1,34 @@
 from langchain_core.documents import Document
-from langchain_openai import OpenAI
 from langchain.chains import RetrievalQA
 import os, utils
 
+from src.config import AppConfig
+
+
 class DocumentRetriever:
-    def __init__(self, vector_store_type: str = "faiss", embedding_model: str = "huggingface",  persist_directory: str = "./vector_data"):
+    def __init__(self, config: AppConfig):
         """
         Initialize the Universal Retriever that can work with either Chroma or FAISS.
-        :param vector_store_type: The type of vector store ('chroma' or 'faiss').
-        :param embedding_model: The desired embedding model
-        :param persist_directory: Directory to store the vector store data.
+        : param config: the configuration setup.
         """
         # Ensure the directory exists
-        if not os.path.exists(persist_directory):
-            os.makedirs(persist_directory)
-            print(f"Created directory: {persist_directory}")
+        if not os.path.exists(config.vector_store.persist_directory):
+            os.makedirs(config.vector_store.persist_directory)
+            print(f"Created directory: {config.vector_store.persist_directory}")
         else:
-            print(f"Using existing directory: {persist_directory}")
+            print(f"Using existing directory: {config.vector_store.persist_directory}")
 
-        self.embedding_model = self._get_embedding_model(embedding_model)
-        self.vector_store_type = vector_store_type
-        self.persist_directory = persist_directory
+        self.embedding_model = utils.get_embedding_model(config.embeddings.embedding_model)
+        self.vector_store_type = config.vector_store.vector_type
+        self.persist_directory = config.vector_store.persist_directory
 
         # get the vector store instance
-        self.vector_store = self._get_vector_store()
+        self.vector_store = utils.get_vector_store(vector_store_type=config.vector_store.vector_type,
+                                                   persist_directory=config.vector_store.persist_directory,
+                                                   embedding_model=self.embedding_model)
 
         # Initialize the language model (OpenAI for QA)
-        self.llm = OpenAI(temperature=0)
+        self.llm = utils.get_llm(llm=config.llms.llm, temperature=config.llms.temperature)
 
         # Set up the RetrievalQA chain
         self.qa = RetrievalQA.from_chain_type(llm=self.llm, chain_type="stuff", retriever=self.vector_store.as_retriever())
@@ -58,20 +60,3 @@ class DocumentRetriever:
         elif self.vector_store_type == 'faiss':
             self.vector_store.save_local(self.persist_directory)  # FAISS uses save_local
 
-    def _get_embedding_model(self, embedding_model: str = "openai"):
-        # Decide which embedding model to use
-        if embedding_model == "openai":
-            return utils.get_openai_embedding()
-        elif embedding_model == "huggingface":
-            return utils.get_huggingface_embedding()
-        else:
-            raise ValueError(f"Unsupported embedding mode: {embedding_model}")
-
-    def _get_vector_store(self):
-        # Decide which vector store to use (Chroma or FAISS)
-        if self.vector_store_type == 'chroma':
-            return utils.get_chroma_instance(persist_directory=self.persist_directory, embedding_model=self.embedding_model)
-        elif self.vector_store_type == 'faiss':
-            return utils.get_faiss_instance(persist_directory=self.persist_directory, embedding_model=self.embedding_model)
-        else:
-            raise ValueError(f"Unsupported vector store: {self.vector_store_type}")

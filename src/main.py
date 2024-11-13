@@ -1,3 +1,5 @@
+import json
+
 import yaml, os
 
 from config import AppConfig
@@ -16,40 +18,39 @@ def main():
     config = AppConfig.from_yaml("config.yaml")
 
     # set openapi key
-    os.environ["OPENAI_API_KEY"] = config.openapi.api_key
+    os.environ["OPENAI_API_KEY"] = config.llms.openapi_key
+    os.environ["HUGGINGFACEHUB_API_TOKEN"] = config.llms.hugging_face_key
 
     # Initialize the document retriever
-    document_retriever = DocumentRetriever(vector_store_type=config.vector_store.vector_type,
-                                  embedding_model=config.embeddings.embedding_model,
-                                  persist_directory=config.vector_store.persist_directory)
+    document_retriever = DocumentRetriever(config=config)
 
     # Initialize the QA Wrapper
     question_answer = QuestionAnswer(retriever=document_retriever)
 
     # ===================================================================================
     # Sample data to add to the vector store (list, pdf, txt)
-    page_content = [
-        "The bank offers a variety of credit cards with different rewards programs.",
-        "Our savings accounts provide competitive interest rates.",
-        "The bank's mortgage plans include fixed and variable interest rate options.",
-        "Philippines is located in south east asia",
-        "The capital of the Philippines is Manila",
-        "chowpin is bald"
-    ]
-    metadata = [
-        {"source": "bank_product_guide"},
-        {"source": "bank_website"},
-        {"source": "mortgage_brochure"},
-        {"source": "wikipedia"},
-        {"source": "wikipedia"},
-        {"source": "barber_shop"}
-    ]
-
-    # Convert to a list of Document objects
-    documents = [
-        Document(page_content=content, metadata=meta)
-        for content, meta in zip(page_content, metadata)
-    ]
+    # page_content = [
+    #     "The bank offers a variety of credit cards with different rewards programs.",
+    #     "Our savings accounts provide competitive interest rates.",
+    #     "The bank's mortgage plans include fixed and variable interest rate options.",
+    #     "Philippines is located in south east asia",
+    #     "The capital of the Philippines is Manila",
+    #     "chowpin is bald"
+    # ]
+    # metadata = [
+    #     {"source": "bank_product_guide"},
+    #     {"source": "bank_website"},
+    #     {"source": "mortgage_brochure"},
+    #     {"source": "wikipedia"},
+    #     {"source": "wikipedia"},
+    #     {"source": "barber_shop"}
+    # ]
+    #
+    # # Convert to a list of Document objects
+    # documents = [
+    #     Document(page_content=content, metadata=meta)
+    #     for content, meta in zip(page_content, metadata)
+    # ]
 
     # document = utils.extract_text_from_pdf(pdf_path=pdf_path)
     # document = utils.extract_text_from_file(file_path=file_path)
@@ -60,21 +61,21 @@ def main():
     # document_retriever.add_documents(documents, True)
 
     # Query the retriever and generate responses using RAG
-    query_text = "chowpin"
-    print(f"Question: {query_text}")
-
-    # get similarities
-    response_similarities = question_answer.generate_similarities(query_text)
-    print(f"Similarities: {response_similarities}")
-
-    # get similarities
-    response_similarities_with_score = question_answer.generate_similarities_with_score(query_text)
-    print(f"Similarities with score: {response_similarities_with_score}")
+    query_text = "what is the bank's mortgage plan"
+    # print(f"Question: {query_text}")
+    #
+    # # get similarities
+    # response_similarities = question_answer.generate_similarities(query_text)
+    # print(f"Similarities: {response_similarities}")
+    #
+    # # get similarities
+    # response_similarities_with_score = question_answer.generate_similarities_with_score(query_text)
+    # print(f"Similarities with score: {response_similarities_with_score}")
 
     # get answer from LLM (final format)
-    # response_answer = question_answer.generate_response(query_text)
-    # print(f"Question: {query_text}")
-    # print(f"Answer: {response_answer}")
+    response_answer = question_answer.generate_response(query_text)
+    print(f"Question: {query_text}")
+    print(f"Answer: {response_answer['result']}")
 
 
 if __name__ == "__main__":
