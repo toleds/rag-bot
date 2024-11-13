@@ -1,4 +1,4 @@
-import yaml, os, utils
+import yaml, os
 
 from config import AppConfig
 from question_answer import QuestionAnswer
@@ -27,12 +27,20 @@ def main():
     # ===================================================================================
     # Sample data to add to the vector store (list, pdf, txt)
     page_content = [
+        "The bank offers a variety of credit cards with different rewards programs.",
+        "Our savings accounts provide competitive interest rates.",
+        "The bank's mortgage plans include fixed and variable interest rate options.",
         "Philippines is located in south east asia",
-        "The capital of the Philippines is Manila"
+        "The capital of the Philippines is Manila",
+        "chowpin is bald"
     ]
     metadata = [
+        {"source": "bank_product_guide"},
+        {"source": "bank_website"},
+        {"source": "mortgage_brochure"},
         {"source": "wikipedia"},
-        {"source": "wikipedia"}
+        {"source": "wikipedia"},
+        {"source": "barber_shop"}
     ]
 
     # Convert to a list of Document objects
@@ -46,8 +54,8 @@ def main():
     # ===================================================================================
 
     # Add documents to the retriever (vector store)
-    print("Adding documents to the vector store...")
-    retriever.add_documents(documents)
+    # print("Adding documents to the vector store...")
+    # retriever.add_documents(documents, True)
 
     # Query the retriever and generate responses using RAG
     query_text = "where is philippines located"
@@ -58,10 +66,10 @@ def main():
     print(f"Similarities: {response_similarities}")
 
     # get similarities
-    response_similarities = question_answer.generate_similarities_with_score(query_text)
-    print(f"Similarities with score: {response_similarities}")
+    response_similarities_with_score = question_answer.generate_similarities_with_score(query_text)
+    print(f"Similarities with score: {response_similarities_with_score}")
 
-    # get answer
+    # get answer from LLM (final format)
     # response_answer = question_answer.generate_response(query_text)
     # print(f"Question: {query_text}")
     # print(f"Answer: {response_answer}")

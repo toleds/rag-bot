@@ -1,7 +1,7 @@
 from xml.dom.minidom import Document
 
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_openai import OpenAIEmbeddings
+# from langchain_openai import OpenAIEmbeddings
 from langchain_openai import OpenAI
 from langchain.chains import RetrievalQA
 import os, utils
@@ -20,7 +20,7 @@ class DocumentRetriever:
         else:
             print(f"Using existing directory: {persist_directory}")
 
-        self.embedding_model = HuggingFaceEmbeddings()
+        self.embedding_model = HuggingFaceEmbeddings(model_name = "sentence-transformers/all-mpnet-base-v2")
         self.vector_store_type = vector_store
         self.persist_directory = persist_directory
 
@@ -41,13 +41,13 @@ class DocumentRetriever:
         if store_documents:
             self.store_documents()
 
-    def search(self, query_text: str, top_k: int = 5):
+    def search(self, query_text: str, top_k: int = 3):
         """Search the vector store."""
-        return self.vector_store.similarity_search(query_text)
+        return self.vector_store.similarity_search(query_text, top_k)
 
-    def search_with_score(self, query_text: str, top_k: int = 5):
+    def search_with_score(self, query_text: str, top_k: int = 3):
         """Search the vector store."""
-        return self.vector_store.similarity_search_with_score(query_text)
+        return self.vector_store.similarity_search_with_score(query_text, top_k)
 
     def question_answer(self, query_text: str):
         """"QA the LLM"""
