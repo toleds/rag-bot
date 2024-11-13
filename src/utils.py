@@ -1,10 +1,14 @@
-from typing import List, Dict, Any
+import os
+
+from typing import List
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
+from faiss import IndexFlatL2
+from langchain_community.docstore.in_memory import InMemoryDocstore
 
-import PyPDF2, os
 
 def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: int = 100) -> List[Document]:
     """
@@ -18,22 +22,16 @@ def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: 
     if not os.path.isfile(pdf_path):
         raise FileNotFoundError(f"PDF file not found: {pdf_path}")
 
-    text_chunks = []
+    # Load the file
+    loader = PyPDFLoader(pdf_path)
+    documents = loader.load()
+
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
-    # Extract text and split per page
-    with open(pdf_path, "rb") as file:
-        reader = PyPDF2.PdfReader(file)
-        for page_num, page in enumerate(reader.pages):
-            text = page.extract_text()
-            if text:
-                page_text = text.strip()
-                # Split the text from this page into chunks
-                page_chunks = text_splitter.split_documents(page_text)
-                print(f"Split page {page_num + 1} into {len(page_chunks)} chunks.")
-                text_chunks.extend(page_chunks)
-
+    # Split the text into chunks
+    text_chunks = text_splitter.split_documents(documents)
     print(f"Extracted and split text into {len(text_chunks)} chunks from PDF: {pdf_path}")
+
     return text_chunks
 
 def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap: int = 100) -> List[Document]:
@@ -48,27 +46,50 @@ def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"Text file not found: {file_path}")
 
-    text_chunks = []
+    # Load the file
+    loader = TextLoader(file_path)
+    documents = loader.load()
+
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
-    # Read the content of the text file
-    with open(file_path, "r", encoding="utf-8") as file:
-        text = file.read().strip()
-
     # Split the text into chunks
-    text_chunks = text_splitter.split_documents(text)
+    text_chunks = text_splitter.split_documents(documents)
     print(f"Extracted and split text into {len(text_chunks)} chunks from file: {file_path}")
 
     return text_chunks
 
 def get_chroma_instance(persist_directory, embedding_model):
     """Initialize Chroma vector store."""
-    if not os.path.exists(persist_directory):
-        os.makedirs(persist_directory)
+    _verify_or_create_vector_store_folder(persist_directory)
+
     return Chroma(persist_directory=persist_directory, embedding_function=embedding_model)
 
 def get_faiss_instance(persist_directory, embedding_model):
     """Initialize FAISS vector store."""
+    _verify_or_create_vector_store_folder(persist_directory)
+
+    # Check if the necessary files exist
+    if not os.path.exists(os.path.join(persist_directory, "index.faiss")) or not os.path.exists(os.path.join(persist_directory, "index.pkl")):
+        print("Files not found. Initializing a new FAISS index...")
+        # Initialize FAISS and save it
+        index = IndexFlatL2(len(embedding_model.embed_query("dummy")))
+        vector_store = FAISS(
+            embedding_function=embedding_model,
+            index=index,
+            docstore=InMemoryDocstore(),
+            index_to_docstore_id={})
+
+        vector_store.save_local(persist_directory)
+        print("FAISS index and docstore have been saved.")
+    else:
+        # Load existing vector store
+        vector_store = FAISS.load_local(folder_path=persist_directory,
+                                        embeddings=embedding_model,
+                                        allow_dangerous_deserialization=True)
+        print("Loaded existing FAISS vector store.")
+
+    return vector_store
+
+def _verify_or_create_vector_store_folder(persist_directory):
     if not os.path.exists(persist_directory):
         os.makedirs(persist_directory)
-    return FAISS.load_local(persist_directory, embedding_model) if os.path.exists(persist_directory) else FAISS.from_documents([], embedding_model)

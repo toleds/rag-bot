@@ -1,4 +1,4 @@
-import yaml, os
+import yaml, os, utils
 
 from config import AppConfig
 from question_answer import QuestionAnswer
@@ -25,16 +25,14 @@ def main():
     question_answer = QuestionAnswer(retriever=retriever)
 
     # ===================================================================================
-    # Sample data to add to the vector store
+    # Sample data to add to the vector store (list, pdf, txt)
     page_content = [
-        "The bank offers a variety of credit cards with different rewards programs.",
-        "Our savings accounts provide competitive interest rates.",
-        "The bank's mortgage plans include fixed and variable interest rate options."
+        "Philippines is located in south east asia",
+        "The capital of the Philippines is Manila"
     ]
     metadata = [
-        {"source": "bank_product_guide"},
-        {"source": "bank_website"},
-        {"source": "mortgage_brochure"}
+        {"source": "wikipedia"},
+        {"source": "wikipedia"}
     ]
 
     # Convert to a list of Document objects
@@ -42,6 +40,9 @@ def main():
         Document(page_content=content, metadata=meta)
         for content, meta in zip(page_content, metadata)
     ]
+
+    # document = utils.extract_text_from_pdf(pdf_path=pdf_path)
+    # document = utils.extract_text_from_file(file_path=file_path)
     # ===================================================================================
 
     # Add documents to the retriever (vector store)
@@ -49,16 +50,21 @@ def main():
     retriever.add_documents(documents)
 
     # Query the retriever and generate responses using RAG
-    query_text = "quantum physics?"
+    query_text = "where is philippines located"
+    print(f"Question: {query_text}")
 
     # get similarities
     response_similarities = question_answer.generate_similarities(query_text)
     print(f"Similarities: {response_similarities}")
 
+    # get similarities
+    response_similarities = question_answer.generate_similarities_with_score(query_text)
+    print(f"Similarities with score: {response_similarities}")
+
     # get answer
-    response_answer = question_answer.generate_response(query_text)
-    print(f"Question: {query_text}")
-    print(f"Answer: {response_answer}")
+    # response_answer = question_answer.generate_response(query_text)
+    # print(f"Question: {query_text}")
+    # print(f"Answer: {response_answer}")
 
 
 if __name__ == "__main__":

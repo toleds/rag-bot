@@ -3,5 +3,5 @@ openapi:
   temperature: 0.7
 
 vector_store:
-  vector_type: "chroma"  # Options: "chroma", "faiss"
+  vector_type: "faiss"  # Options: "chroma", "faiss"
   persist_directory: "./vector_data"

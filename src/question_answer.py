@@ -33,3 +33,18 @@ class QuestionAnswer:
         print(f"Retrieved documents: {response}")
 
         return response
+
+    def generate_similarities_with_score(self, query_text: str, top_k: int = 5):
+        """
+        Generate a response using the RAG pipeline.
+
+        :param query_text: The user's input query.
+        :param top_k: Number of top documents to retrieve.
+        :return: Generated response similarity text.
+        """
+        response = self.retriever.search_with_score(query_text, top_k)
+
+        # Print the retrieved documents to inspect their structure
+        print(f"Retrieved documents: {response}")
+
+        return response
