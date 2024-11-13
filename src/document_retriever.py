@@ -1,16 +1,14 @@
-from xml.dom.minidom import Document
-
-from langchain_huggingface import HuggingFaceEmbeddings
-# from langchain_openai import OpenAIEmbeddings
+from langchain_core.documents import Document
 from langchain_openai import OpenAI
 from langchain.chains import RetrievalQA
 import os, utils
 
 class DocumentRetriever:
-    def __init__(self, vector_store: str, persist_directory: str = "./vector_data"):
+    def __init__(self, vector_store_type: str = "faiss", embedding_model: str = "huggingface",  persist_directory: str = "./vector_data"):
         """
         Initialize the Universal Retriever that can work with either Chroma or FAISS.
-        :param vector_store: The type of vector store ('chroma' or 'faiss').
+        :param vector_store_type: The type of vector store ('chroma' or 'faiss').
+        :param embedding_model: The desired embedding model
         :param persist_directory: Directory to store the vector store data.
         """
         # Ensure the directory exists
@@ -20,8 +18,8 @@ class DocumentRetriever:
         else:
             print(f"Using existing directory: {persist_directory}")
 
-        self.embedding_model = HuggingFaceEmbeddings(model_name = "sentence-transformers/all-mpnet-base-v2")
-        self.vector_store_type = vector_store
+        self.embedding_model = self._get_embedding_model(embedding_model)
+        self.vector_store_type = vector_store_type
         self.persist_directory = persist_directory
 
         # get the vector store instance
@@ -59,6 +57,15 @@ class DocumentRetriever:
             self.vector_store.persist()  # Chroma uses persist
         elif self.vector_store_type == 'faiss':
             self.vector_store.save_local(self.persist_directory)  # FAISS uses save_local
+
+    def _get_embedding_model(self, embedding_model: str = "openai"):
+        # Decide which embedding model to use
+        if embedding_model == "openai":
+            return utils.get_openai_embedding()
+        elif embedding_model == "huggingface":
+            return utils.get_huggingface_embedding()
+        else:
+            raise ValueError(f"Unsupported embedding mode: {embedding_model}")
 
     def _get_vector_store(self):
         # Decide which vector store to use (Chroma or FAISS)

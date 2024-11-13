@@ -19,7 +19,7 @@ class QuestionAnswer:
 
         return response
 
-    def generate_similarities(self, query_text: str, top_k: int = 5):
+    def generate_similarities(self, query_text: str, top_k: int = 2):
         """
         Generate a response using the RAG pipeline.
 
@@ -34,7 +34,7 @@ class QuestionAnswer:
 
         return response
 
-    def generate_similarities_with_score(self, query_text: str, top_k: int = 5):
+    def generate_similarities_with_score(self, query_text: str, top_k: int = 2):
         """
         Generate a response using the RAG pipeline.
 

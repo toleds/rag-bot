@@ -9,6 +9,9 @@ from langchain_core.documents import Document
 from faiss import IndexFlatL2
 from langchain_community.docstore.in_memory import InMemoryDocstore
 
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_openai import OpenAIEmbeddings
+
 
 def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: int = 100) -> List[Document]:
     """
@@ -90,6 +93,13 @@ def get_faiss_instance(persist_directory, embedding_model):
 
     return vector_store
 
+def get_openai_embedding():
+    return OpenAIEmbeddings()  # default embedding model
+
+def get_huggingface_embedding():
+    return HuggingFaceEmbeddings(model_name = "sentence-transformers/all-mpnet-base-v2")
+
 def _verify_or_create_vector_store_folder(persist_directory):
     if not os.path.exists(persist_directory):
         os.makedirs(persist_directory)
+

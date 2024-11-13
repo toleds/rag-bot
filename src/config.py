@@ -10,10 +10,15 @@ class OpenApiConfig:
         self.api_key = api_key
         self.temperature = temperature
 
+class Embeddings:
+    def __init__(self, embedding_model: str):
+        self.embedding_model =  embedding_model
+
 class AppConfig:
-    def __init__(self, vector_store: dict, openapi: dict):
+    def __init__(self, vector_store: dict, openapi: dict, embeddings: dict):
         self.vector_store = VectorStoreConfig(**vector_store)
         self.openapi = OpenApiConfig(**openapi)
+        self.embeddings = Embeddings(**embeddings)
 
     @staticmethod
     def from_yaml(file_path: str) -> "AppConfig":

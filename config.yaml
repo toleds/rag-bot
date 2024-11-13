@@ -5,3 +5,6 @@ openapi:
 vector_store:
   vector_type: "faiss"  # Options: "chroma", "faiss"
   persist_directory: "./vector_data"
+
+embeddings:
+  embedding_model: "huggingface" # hugging_face=HuggingFaceEmbeddings, openai=OpenAIEmbeddings, etc

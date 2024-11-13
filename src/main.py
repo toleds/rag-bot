@@ -19,10 +19,12 @@ def main():
     os.environ["OPENAI_API_KEY"] = config.openapi.api_key
 
     # Initialize the document retriever
-    retriever = DocumentRetriever(vector_store=config.vector_store.vector_type, persist_directory=config.vector_store.persist_directory)
+    document_retriever = DocumentRetriever(vector_store_type=config.vector_store.vector_type,
+                                  embedding_model=config.embeddings.embedding_model,
+                                  persist_directory=config.vector_store.persist_directory)
 
     # Initialize the QA Wrapper
-    question_answer = QuestionAnswer(retriever=retriever)
+    question_answer = QuestionAnswer(retriever=document_retriever)
 
     # ===================================================================================
     # Sample data to add to the vector store (list, pdf, txt)
@@ -55,10 +57,10 @@ def main():
 
     # Add documents to the retriever (vector store)
     # print("Adding documents to the vector store...")
-    # retriever.add_documents(documents, True)
+    # document_retriever.add_documents(documents, True)
 
     # Query the retriever and generate responses using RAG
-    query_text = "where is philippines located"
+    query_text = "chowpin"
     print(f"Question: {query_text}")
 
     # get similarities
