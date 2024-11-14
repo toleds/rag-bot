@@ -5,17 +5,23 @@ class QuestionAnswer:
     """
 
     def __init__(self, retriever):
+        """
+        Init function
+
+        :param retriever:
+        """
         self.retriever = retriever
 
-    def generate_response(self, query_text: str) -> str:
+    def generate_response(self, query_text: str, context: str) -> str:
         """
         Generate QA answer
 
+        :param context:
         :param query_text: The user's input query.
         :return: Generated QA response
         """
 
-        response = self.retriever.question_answer(query_text=query_text)
+        response = self.retriever.question_answer(query_text=query_text, context=context)
 
         return response
 

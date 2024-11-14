@@ -8,6 +8,7 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from faiss import IndexFlatL2
 from langchain_community.docstore.in_memory import InMemoryDocstore
+from langchain_core.vectorstores import VectorStoreRetriever
 
 from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint
 from langchain_openai import OpenAIEmbeddings, OpenAI
@@ -62,6 +63,14 @@ def extract_text_from_file(file_path: str, chunk_size: int = 500, chunk_overlap:
     return text_chunks
 
 def get_vector_store(vector_store_type: str, persist_directory, embedding_model):
+    """
+    decide which vector store to use
+
+    :param vector_store_type:
+    :param persist_directory:
+    :param embedding_model:
+    :return:
+    """
     # Decide which vector store to use (Chroma or FAISS)
     if vector_store_type == 'chroma':
         return get_chroma_instance(persist_directory=persist_directory, embedding_model=embedding_model)
@@ -71,6 +80,12 @@ def get_vector_store(vector_store_type: str, persist_directory, embedding_model)
         raise ValueError(f"Unsupported vector store: {vector_store_type}")
 
 def get_embedding_model(embedding_model: str = "openai"):
+    """
+    decide which embedding model to use
+
+    :param embedding_model:
+    :return:
+    """
     # Decide which embedding model to use
     if embedding_model == "openai":
         return get_openai_embedding()
@@ -80,6 +95,13 @@ def get_embedding_model(embedding_model: str = "openai"):
         raise ValueError(f"Unsupported embedding: {embedding_model}")
 
 def get_llm(llm: str, temperature: float = 0.5):
+    """
+    decide which LLM to use
+
+    :param llm:
+    :param temperature:
+    :return:
+    """
     # Decide which llm to use
     if llm == "openai":
         return get_openai_llm(temperature)
@@ -89,13 +111,25 @@ def get_llm(llm: str, temperature: float = 0.5):
         raise ValueError(f"Unsupported llm: {llm}")
 
 def get_chroma_instance(persist_directory, embedding_model):
-    """Initialize Chroma vector store."""
+    """
+    Initialize Chroma vector store.
+
+    :param persist_directory:
+    :param embedding_model:
+    :return:
+    """
     _verify_or_create_vector_store_folder(persist_directory)
 
     return Chroma(persist_directory=persist_directory, embedding_function=embedding_model)
 
 def get_faiss_instance(persist_directory, embedding_model):
-    """Initialize FAISS vector store."""
+    """
+    Initialize FAISS vector store.
+
+    :param persist_directory:
+    :param embedding_model:
+    :return:
+    """
     _verify_or_create_vector_store_folder(persist_directory)
 
     # Check if the necessary files exist
@@ -121,18 +155,56 @@ def get_faiss_instance(persist_directory, embedding_model):
     return vector_store
 
 def get_openai_embedding():
+    """
+    OpenAI embedding model
+
+    :return:
+    """
     return OpenAIEmbeddings()  # default embedding model
 
 def get_huggingface_embedding():
+    """
+    HuggingFace embedding model
+
+    :return:
+    """
     return HuggingFaceEmbeddings(model_name = "sentence-transformers/all-mpnet-base-v2")
 
 def get_openai_llm(temperature: float = 0.5):
+    """
+
+    :param temperature:
+    :return:
+    """
     return OpenAI(temperature=temperature)
 
 def get_hugging_face_llm(temperature: float = 0.5):
-    return HuggingFaceEndpoint(repo_id = "gpt2", temperature=temperature, max_new_tokens=50)
+    """
+    HuggingFace LLM
+
+    :param temperature:
+    :return:
+    """
+    return HuggingFaceEndpoint(repo_id = "gpt2", temperature=temperature, max_new_tokens=100)
 
 def _verify_or_create_vector_store_folder(persist_directory):
+    """
+    Create or verify folder exists
+
+    :param persist_directory:
+    :return:
+    """
     if not os.path.exists(persist_directory):
         os.makedirs(persist_directory)
 
+def format_context(documents):
+    """
+    reformat document to String
+
+    :param documents:
+    :return:
+    """
+    context = ""
+    for i, doc in enumerate(documents):
+        context += doc.page_content + "\n"
+    return context
