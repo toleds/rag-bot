@@ -6,7 +6,9 @@ llms:
 
 vector_store:
   vector_type: "faiss"  # Options: "chroma", "faiss"
-  persist_directory: "./vector_data"
+  data_path: "./db"
+  resource_path: "./resource"
 
 embeddings:
   embedding_model: "huggingface" # huggingface=HuggingFaceEmbeddings, openai=OpenAIEmbeddings, etc
+

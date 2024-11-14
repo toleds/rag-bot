@@ -12,19 +12,19 @@ class DocumentRetriever:
         : param config: the configuration setup.
         """
         # Ensure the directory exists
-        if not os.path.exists(config.vector_store.persist_directory):
-            os.makedirs(config.vector_store.persist_directory)
-            print(f"Created directory: {config.vector_store.persist_directory}")
+        if not os.path.exists(config.vector_store.data_path):
+            os.makedirs(config.vector_store.data_path)
+            print(f"Created directory: {config.vector_store.data_path}")
         else:
-            print(f"Using existing directory: {config.vector_store.persist_directory}")
+            print(f"Using existing directory: {config.vector_store.data_path}")
 
         self.embedding_model = utils.get_embedding_model(config.embeddings.embedding_model)
         self.vector_store_type = config.vector_store.vector_type
-        self.persist_directory = config.vector_store.persist_directory
+        self.data_path = config.vector_store.data_path
 
         # get the vector store instance
         self.vector_store = utils.get_vector_store(vector_store_type=config.vector_store.vector_type,
-                                                   persist_directory=config.vector_store.persist_directory,
+                                                   data_path=config.vector_store.data_path,
                                                    embedding_model=self.embedding_model)
 
         # Initialize the language model (OpenAI for QA)
@@ -91,5 +91,5 @@ class DocumentRetriever:
             # self.vector_store.persist()  # Chroma uses persist
             pass
         elif self.vector_store_type == 'faiss':
-            self.vector_store.save_local(self.persist_directory)  # FAISS uses save_local
+            self.vector_store.save_local(self.data_path)  # FAISS uses save_local
 

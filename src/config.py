@@ -2,9 +2,10 @@ import yaml
 
 
 class VectorStoreConfig:
-    def __init__(self, vector_type: str, persist_directory: str):
+    def __init__(self, vector_type: str, data_path: str, resource_path: str):
         self.vector_type = vector_type
-        self.persist_directory = persist_directory
+        self.data_path = data_path
+        self.resource_path = resource_path
 
 class LlmConfig:
     def __init__(self, llm: str, openapi_key: str, hugging_face_key: str, temperature: float):
