@@ -59,26 +59,17 @@ def main():
     # document_retriever.add_documents(documents2, True)
 
     # Query the retriever and generate responses using RAG
-    query_text = "describe chowpin"
-    #
+    query_text = "when did James became 2 time nba champion?"
     # # get similarities
-    response_similarities = question_answer.generate_similarities(query_text)
-    print(f"Similarities: {response_similarities}")
-    #
-    # # get similarities
-    # response_similarities_with_score = question_answer.generate_similarities_with_score(query_text)
-    # print(f"Similarities with score: {response_similarities_with_score}")
+    response_similarities = question_answer.generate_similarities(query_text, top_k=5)
 
     # get answer from LLM (final format)
     context = utils.format_context(response_similarities)
-    print(f"Context: {context}")
-
     response_answer = question_answer.generate_response(query_text, context)
-    print(f"Question: {query_text}")
-    print(f"Answer: {response_answer['result'].replace("\n","")}")
 
-    print("End.")
-
+    print(f"\nQuery: {response_answer["query"]}")
+    print(f"\nContext: {response_answer["context"]}")
+    print(f"\nResult: {response_answer["result"]}")
 
 if __name__ == "__main__":
     main()

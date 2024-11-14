@@ -2,19 +2,19 @@ import os
 
 from typing import List
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.llms.huggingface_hub import HuggingFaceHub
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from faiss import IndexFlatL2
 from langchain_community.docstore.in_memory import InMemoryDocstore
-from langchain_core.vectorstores import VectorStoreRetriever
 
-from langchain_huggingface import HuggingFaceEmbeddings, HuggingFaceEndpoint
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import OpenAIEmbeddings, OpenAI
 
 
-def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: int = 100) -> List[Document]:
+def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: int = 150) -> List[Document]:
     """
     Extracts text from a PDF file, splits the text from each page into chunks, and returns a list of text chunks.
 
@@ -30,7 +30,7 @@ def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: 
     loader = PyPDFLoader(pdf_path)
     documents = loader.load()
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, separators=["\n\n", "\n", " ", ""])
 
     # Split the text into chunks
     text_chunks = text_splitter.split_documents(documents)
@@ -38,7 +38,7 @@ def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: 
 
     return text_chunks
 
-def extract_text_from_file(file_path: str, chunk_size: int = 500, chunk_overlap: int = 0) -> List[Document]:
+def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap: int = 150) -> List[Document]:
     """
     Extracts text from a plain text file, splits it into chunks, and returns a list of text chunks.
 
@@ -54,7 +54,7 @@ def extract_text_from_file(file_path: str, chunk_size: int = 500, chunk_overlap:
     loader = TextLoader(file_path)
     documents = loader.load()
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, length_function=len)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, separators=["\n\n", "\n", " ", ""])
 
     # Split the text into chunks
     text_chunks = text_splitter.split_documents(documents)
@@ -144,7 +144,7 @@ def get_faiss_instance(persist_directory, embedding_model):
             index_to_docstore_id={})
 
         vector_store.save_local(persist_directory)
-        print("FAISS index and docstore have been saved.")
+        print("FAISS index and doc store have been saved.")
     else:
         # Load existing vector store
         vector_store = FAISS.load_local(folder_path=persist_directory,
@@ -185,7 +185,7 @@ def get_hugging_face_llm(temperature: float = 0.5):
     :param temperature:
     :return:
     """
-    return HuggingFaceEndpoint(repo_id = "gpt2", temperature=temperature, max_new_tokens=100)
+    return HuggingFaceHub(repo_id="facebook/bart-large-cnn", task="summarization")
 
 def _verify_or_create_vector_store_folder(persist_directory):
     """
@@ -204,7 +204,11 @@ def format_context(documents):
     :param documents:
     :return:
     """
-    context = ""
-    for i, doc in enumerate(documents):
-        context += doc.page_content + "\n"
+    # Use only the top 1 or 2 most relevant documents
+    context = " ".join(doc.page_content.strip() for doc in documents)
+
+    # Truncate the context if it exceeds max_length
+    if len(context) > 1000:
+        context = context[:1000]
+
     return context

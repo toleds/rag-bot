@@ -2,8 +2,6 @@ from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 
 import os, utils
-
-
 from src.config import AppConfig
 
 
@@ -33,7 +31,11 @@ class DocumentRetriever:
         self.llm = utils.get_llm(llm=config.llms.llm, temperature=config.llms.temperature)
 
         # Set up the RetrievalQA chain
-        self.qa = RetrievalQA.from_chain_type(llm=self.llm, chain_type="stuff", retriever=self.vector_store.as_retriever())
+        self.qa = RetrievalQA.from_chain_type(llm=self.llm,
+                                              chain_type="stuff",
+                                              retriever=self.vector_store.as_retriever(),
+                                              verbose=True,
+                                              return_source_documents=True)
 
     def add_documents(self, documents: list[Document], store_documents: bool = False):
         """
@@ -57,7 +59,7 @@ class DocumentRetriever:
         :param top_k:
         :return:
         """
-        return self.vector_store.similarity_search(query_text, top_k)
+        return self.vector_store.similarity_search(query_text, k=2, fetch_k=top_k)
 
     def search_with_score(self, query_text: str, top_k: int = 3):
         """

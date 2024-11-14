@@ -1,12 +1,12 @@
 llms:
-  llm: "huggingface" # openapi, huggingface
+  llm: "huggingface" # openai, huggingface, chatopenai
   openapi_key: "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"
   hugging_face_key: "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"
-  temperature: 0.1
+  temperature: 0.5
 
 vector_store:
   vector_type: "faiss"  # Options: "chroma", "faiss"
   persist_directory: "./vector_data"
 
 embeddings:
-  embedding_model: "huggingface" # hugging_face=HuggingFaceEmbeddings, openai=OpenAIEmbeddings, etc
+  embedding_model: "huggingface" # huggingface=HuggingFaceEmbeddings, openai=OpenAIEmbeddings, etc
