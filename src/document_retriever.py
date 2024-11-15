@@ -18,17 +18,20 @@ class DocumentRetriever:
         else:
             print(f"Using existing directory: {config.vector_store.data_path}")
 
-        self.embedding_model = utils.get_embedding_model(config.embeddings.embedding_model)
+        self.embedding_type = utils.get_embedding_model(config.embeddings.embedding_type, config.embeddings.embedding_model)
         self.vector_store_type = config.vector_store.vector_type
         self.data_path = config.vector_store.data_path
 
         # get the vector store instance
         self.vector_store = utils.get_vector_store(vector_store_type=config.vector_store.vector_type,
                                                    data_path=config.vector_store.data_path,
-                                                   embedding_model=self.embedding_model)
+                                                   embedding_model=self.embedding_type)
 
         # Initialize the language model (OpenAI for QA)
-        self.llm = utils.get_llm(llm=config.llms.llm, temperature=config.llms.temperature)
+        self.llm = utils.get_llm(llm_type=config.llms.llm_type,
+                                 model_name=config.llms.model_name,
+                                 task=config.llms.task,
+                                 temperature=config.llms.temperature)
 
         # Set up the RetrievalQA chain
         self.qa = RetrievalQA.from_chain_type(llm=self.llm,
@@ -61,15 +64,20 @@ class DocumentRetriever:
         """
         return self.vector_store.similarity_search(query_text, k=2, fetch_k=top_k)
 
-    def search_with_score(self, query_text: str, top_k: int = 3):
+    def search_with_score(self, query_text: str, top_k: int = 3, filter_score: float = 0.7):
         """
         Search the vector store.
 
+        :param filter_score:
         :param query_text:
         :param top_k:
         :return:
         """
-        return self.vector_store.similarity_search_with_score(query_text, top_k)
+
+        results = self.vector_store.similarity_search_with_score(query_text, top_k)
+        filtered_results = [doc for doc, score in results if score < filter_score]
+
+        return filtered_results
 
     def question_answer(self, query_text: str, context: str):
         """

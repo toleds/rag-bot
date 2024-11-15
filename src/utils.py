@@ -79,36 +79,39 @@ def get_vector_store(vector_store_type: str, data_path, embedding_model):
     else:
         raise ValueError(f"Unsupported vector store: {vector_store_type}")
 
-def get_embedding_model(embedding_model: str = "openai"):
+def get_embedding_model(embedding_type: str = "openai", embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
     """
     decide which embedding model to use
 
     :param embedding_model:
+    :param embedding_type:
     :return:
     """
     # Decide which embedding model to use
-    if embedding_model == "openai":
-        return get_openai_embedding()
-    elif embedding_model == "huggingface":
-        return get_huggingface_embedding()
+    if embedding_type == "openai":
+        return get_openai_embedding(embedding_model=embedding_model)
+    elif embedding_type == "huggingface":
+        return get_huggingface_embedding(embedding_model=embedding_model)
     else:
         raise ValueError(f"Unsupported embedding: {embedding_model}")
 
-def get_llm(llm: str, temperature: float = 0.5):
+def get_llm(llm_type: str, model_name: str, task: str, temperature: float = 0.5):
     """
     decide which LLM to use
 
-    :param llm:
+    :param task:
+    :param model_name:
+    :param llm_type:
     :param temperature:
     :return:
     """
     # Decide which llm to use
-    if llm == "openai":
-        return get_openai_llm(temperature)
-    elif llm == "huggingface":
-        return get_hugging_face_llm(temperature)
+    if llm_type == "openai":
+        return get_openai_llm(model_name=model_name, temperature=temperature)
+    elif llm_type == "huggingface":
+        return get_hugging_face_llm(model_name=model_name, task=task, temperature=temperature)
     else:
-        raise ValueError(f"Unsupported llm: {llm}")
+        raise ValueError(f"Unsupported llm: {llm_type}")
 
 def get_chroma_instance(data_path, embedding_model):
     """
@@ -154,38 +157,41 @@ def get_faiss_instance(data_path, embedding_model):
 
     return vector_store
 
-def get_openai_embedding():
+def get_openai_embedding(embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
     """
     OpenAI embedding model
 
     :return:
     """
-    return OpenAIEmbeddings()  # default embedding model
+    return OpenAIEmbeddings(model=embedding_model)  # default embedding model
 
-def get_huggingface_embedding():
+def get_huggingface_embedding(embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
     """
     HuggingFace embedding model
 
     :return:
     """
-    return HuggingFaceEmbeddings(model_name = "sentence-transformers/all-MiniLM-L6-v2")
+    return HuggingFaceEmbeddings(model_name = embedding_model)
 
-def get_openai_llm(temperature: float = 0.5):
+def get_openai_llm(model_name: str, temperature: float = 0.5):
     """
 
+    :param model_name:
     :param temperature:
     :return:
     """
-    return OpenAI(temperature=temperature)
+    return OpenAI(model_name=model_name, temperature=temperature)
 
-def get_hugging_face_llm(temperature: float = 0.5):
+def get_hugging_face_llm(model_name: str, task: str, temperature: float = 0.5):
     """
     HuggingFace LLM
 
+    :param task:
+    :param model_name:
     :param temperature:
     :return:
     """
-    return HuggingFaceHub(repo_id="facebook/bart-large-cnn", task="summarization")
+    return HuggingFaceHub(repo_id=model_name, task=task)
 
 def _verify_or_create_vector_store_folder(data_path):
     """

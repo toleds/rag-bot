@@ -1,8 +1,10 @@
 llms:
-  llm: "huggingface" # openai, huggingface, chatopenai
-  openapi_key: "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"
-  hugging_face_key: "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"
+  llm_type: "huggingface" # openai, huggingface, chatopenai
   temperature: 0.5
+  model_name: "facebook/bart-large-cnn"
+  task: "summarization"
+#  api_key: "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"
+  api_key: "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"
 
 vector_store:
   vector_type: "faiss"  # Options: "chroma", "faiss"
@@ -10,5 +12,7 @@ vector_store:
   resource_path: "./resource"
 
 embeddings:
-  embedding_model: "huggingface" # huggingface=HuggingFaceEmbeddings, openai=OpenAIEmbeddings, etc
+  embedding_type: "huggingface" # huggingface=HuggingFaceEmbeddings, openai=OpenAIEmbeddings, etc
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+
 

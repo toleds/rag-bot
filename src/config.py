@@ -8,15 +8,17 @@ class VectorStoreConfig:
         self.resource_path = resource_path
 
 class LlmConfig:
-    def __init__(self, llm: str, openapi_key: str, hugging_face_key: str, temperature: float):
-        self.llm = llm
-        self.openapi_key = openapi_key
-        self.hugging_face_key = hugging_face_key
+    def __init__(self, llm_type: str, temperature: float, model_name: str, task: str, api_key: str):
+        self.llm_type = llm_type
         self.temperature = temperature
+        self.model_name = model_name
+        self.task = task
+        self.api_key = api_key
 
 class Embeddings:
-    def __init__(self, embedding_model: str):
+    def __init__(self, embedding_model: str, embedding_type: str):
         self.embedding_model =  embedding_model
+        self.embedding_type = embedding_type
 
 class AppConfig:
     def __init__(self, vector_store: dict, llms: dict, embeddings: dict):

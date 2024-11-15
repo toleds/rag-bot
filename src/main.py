@@ -15,8 +15,8 @@ def main():
     config = AppConfig.from_yaml("config.yaml")
 
     # set openapi key
-    os.environ["OPENAI_API_KEY"] = config.llms.openapi_key
-    os.environ["HUGGINGFACEHUB_API_TOKEN"] = config.llms.hugging_face_key
+    os.environ["OPENAI_API_KEY"] = config.llms.api_key
+    os.environ["HUGGINGFACEHUB_API_TOKEN"] = config.llms.api_key
 
     # Initialize the document retriever
     document_retriever = DocumentRetriever(config=config)
@@ -61,7 +61,7 @@ def main():
     # Query the retriever and generate responses using RAG
     query_text = "when did James became 2 time nba champion?"
     # # get similarities
-    response_similarities = question_answer.generate_similarities(query_text, top_k=5)
+    response_similarities = question_answer.generate_similarities_with_score(query_text, top_k=5, filter_score=0.7)
 
     # get answer from LLM (final format)
     context = utils.format_context(response_similarities)
