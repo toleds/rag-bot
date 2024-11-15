@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from config import AppConfig
 from document_retriever import DocumentRetriever
 from question_answer import QuestionAnswer
-from question_answer_request import QuestionAnswerRequest
+from model import QuestionAnswerRequest, QuestionAnswerResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -51,18 +51,18 @@ router = APIRouter(prefix="/api/v1")
 @router.post("/question_answer")
 async def question_answer(request: QuestionAnswerRequest):
     # get similarities
-    response_similarities = app.state.question_answer.generate_similarities_with_score(request.prompt, top_k=5, filter_score=0.7)
+    response_similarities = app.state.question_answer.generate_similarities_with_score(request.question, top_k=5, filter_score=0.7)
 
     # get answer from LLM (final format)
     context = utils.format_context(response_similarities)
-    response_answer = app.state.question_answer.generate_response(request.prompt, context)
+    response_answer = app.state.question_answer.generate_response(request.question, context)
 
-    print(f"\nQuery: {response_answer["query"]}")
-    print(f"\nContext: {response_answer["context"]}")
-    print(f"\nResult: {response_answer["result"]}")
-    print(f"\nSource: {response_answer["source_documents"]}")
-
-    return JSONResponse({"response": 200})
+    return QuestionAnswerResponse(
+        question=response_answer["query"],
+        context=response_answer["context"],
+        answer=response_answer["result"],
+        source=response_answer["source_documents"]
+    )
 
 
 @router.post("/add_document")
