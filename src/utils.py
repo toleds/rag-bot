@@ -139,7 +139,7 @@ def get_faiss_instance(data_path, embedding_model):
     if not os.path.exists(os.path.join(data_path, "index.faiss")) or not os.path.exists(os.path.join(data_path, "index.pkl")):
         print("Files not found. Initializing a new FAISS index...")
         # Initialize FAISS and save it
-        index = IndexFlatL2(len(embedding_model.embed_query("dummy")))
+        index = IndexFlatL2(512)
         vector_store = FAISS(
             embedding_function=embedding_model,
             index=index,

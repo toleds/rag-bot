@@ -11,6 +11,7 @@ from document_retriever import DocumentRetriever
 from question_answer import QuestionAnswer
 from model import QuestionAnswerRequest, QuestionAnswerResponse
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Load configuration
@@ -51,7 +52,7 @@ router = APIRouter(prefix="/api/v1")
 @router.post("/question_answer")
 async def question_answer(request: QuestionAnswerRequest):
     # get similarities
-    response_similarities = app.state.question_answer.generate_similarities_with_score(request.question, top_k=5, filter_score=0.75)
+    response_similarities = app.state.question_answer.generate_similarities_with_score(request.question, top_k=5, filter_score=1.0)
 
     # get answer from LLM (final format)
     context = utils.format_context(response_similarities)

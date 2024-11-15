@@ -73,7 +73,7 @@ class DocumentRetriever:
 
         # If the response is empty, raise 404
         if not filtered_results:
-            raise HTTPException(status_code=404, detail="No similar documents found.")
+            raise HTTPException(status_code=404, detail="No similar documents found.  Kindly refine your query.")
 
         return filtered_results
 
