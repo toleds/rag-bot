@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
     print("Application shutdown")
 
 # Create the FastAPI app
-app = FastAPI(title="My API", version="1.0.0", base_path="/api/v1", lifespan=lifespan)
+app = FastAPI(title="RAG-Bot", version="1.0.0", base_path="/api/v1", lifespan=lifespan)
 # Create a router with a prefix
 router = APIRouter(prefix="/api/v1")
 
