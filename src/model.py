@@ -6,6 +6,5 @@ class QuestionAnswerRequest(BaseModel):
 
 class QuestionAnswerResponse(BaseModel):
     question: str
-    context: str
     answer: str
     source: list[Document]
