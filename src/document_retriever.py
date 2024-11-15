@@ -11,13 +11,6 @@ class DocumentRetriever:
         Initialize the Universal Retriever that can work with either Chroma or FAISS.
         : param config: the configuration setup.
         """
-        # Ensure the directory exists
-        if not os.path.exists(config.vector_store.data_path):
-            os.makedirs(config.vector_store.data_path)
-            print(f"Created directory: {config.vector_store.data_path}")
-        else:
-            print(f"Using existing directory: {config.vector_store.data_path}")
-
         self.embedding_type = utils.get_embedding_model(config.embeddings.embedding_type, config.embeddings.embedding_model)
         self.vector_store_type = config.vector_store.vector_type
         self.data_path = config.vector_store.data_path
