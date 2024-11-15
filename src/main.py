@@ -39,6 +39,7 @@ async def lifespan(app: FastAPI):
     app.state.document_retriever = document_retriever
     # Initialize the QA Wrapper
     app.state.question_answer = QuestionAnswer(retriever=document_retriever)
+    app.state.app_config = config
 
     print("Application startup")
     yield
@@ -49,7 +50,7 @@ app = FastAPI(title="My API", version="1.0.0", base_path="/api/v1", lifespan=lif
 # Create a router with a prefix
 router = APIRouter(prefix="/api/v1")
 
-@router.post("/question_answer")
+@router.post("/question-answer")
 async def question_answer(request: QuestionAnswerRequest):
     # get similarities
     response_similarities = app.state.question_answer.generate_similarities_with_score(request.question, top_k=5, filter_score=1.0)
@@ -59,29 +60,33 @@ async def question_answer(request: QuestionAnswerRequest):
     response_answer = app.state.question_answer.generate_response(request.question, context)
 
     return QuestionAnswerResponse(
-        question=response_answer["query"],
-        answer=response_answer["result"],
-        source=response_answer["source_documents"]
-    )
+            question=response_answer["query"],
+            answer=response_answer["result"],
+            source=response_answer["source_documents"]
+        )
 
 
-@router.post("/add_document")
+@router.post("/add-document")
 async def add_document(file: UploadFile = File(...)):
-    file_path = f"resource/{file.filename}"
+    file_path = f"{app.state.app_config.vector_store.resource_path}/{file.filename}"
+
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     file_extension = file.filename.split(".")[-1]
+
     if "txt" in file_extension:
         document = utils.extract_text_from_file(file_path=file_path)
     elif "pdf" in file_extension:
-        document = utils.extract_text_from_pdf(file_path=file_path)
+        document = utils.extract_text_from_pdf(pdf_path=file_path)
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"The file extension is not valid.: {file_extension}",
         )
+
     app.state.document_retriever.add_documents(document, True)
-    return JSONResponse({"result": 200})
+
+    return JSONResponse(content={"message": "File uploaded successfully.  Processing initiated."}, status_code=status.HTTP_202_ACCEPTED)
 
 # Include the router into the FastAPI app
 app.include_router(router)
