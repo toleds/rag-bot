@@ -2,8 +2,8 @@ import os
 from contextlib import asynccontextmanager
 
 import utils
-
-from fastapi import FastAPI, UploadFile, File, APIRouter
+import shutil
+from fastapi import FastAPI, UploadFile, File, APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 
 from config import AppConfig
@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize the document retriever
     document_retriever = DocumentRetriever(config=config)
-
+    app.state.document_retriever = document_retriever
     # Initialize the QA Wrapper
     app.state.question_answer = QuestionAnswer(retriever=document_retriever)
 
@@ -66,6 +66,20 @@ async def question_answer(request: QuestionAnswerRequest):
 
 @router.post("/add_document")
 async def add_document(file: UploadFile = File(...)):
+    file_path = f"resources/{file.filename}"
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    file_extension = file.filename.split(".")[-1]
+    if "txt" in file_extension:
+        document = utils.extract_text_from_file(file_path=file_path)
+    elif "pdf" in file_extension:
+        document = utils.extract_text_from_pdf(file_path=file_path)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"The file extension is not valid.: {file_extension}",
+        )
+    app.state.document_retriever.add_documents(document, True)
     return JSONResponse({"result": 200})
 
 # Include the router into the FastAPI app
