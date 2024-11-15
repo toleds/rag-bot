@@ -1,23 +1,25 @@
-import yaml, os, utils
+import os
+from contextlib import asynccontextmanager
+
+import utils
+
+from fastapi import FastAPI, UploadFile, File, APIRouter
+from fastapi.responses import JSONResponse
 
 from config import AppConfig
-from question_answer import QuestionAnswer
 from document_retriever import DocumentRetriever
+from question_answer import QuestionAnswer
+from question_answer_request import QuestionAnswerRequest
 
-# Helper function to load configuration from a YAML file
-def load_config(config_path: str):
-    with open(config_path, 'r') as file:
-        return yaml.safe_load(file)
-
-# Main function
-def main():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     # Load configuration
     config = AppConfig.from_yaml("config.yaml")
 
     # Ensure the directory exists
     if not os.path.exists(config.vector_store.data_path):
         os.makedirs(config.vector_store.data_path)
-        print(f"Created Data irectory: {config.vector_store.data_path}")
+        print(f"Created Data directory: {config.vector_store.data_path}")
     else:
         print(f"Using existing Data directory: {config.vector_store.data_path}")
 
@@ -35,48 +37,42 @@ def main():
     document_retriever = DocumentRetriever(config=config)
 
     # Initialize the QA Wrapper
-    question_answer = QuestionAnswer(retriever=document_retriever)
+    app.state.question_answer = QuestionAnswer(retriever=document_retriever)
 
-    # ===================================================================================
-    # Sample data to add to the vector store (list, pdf, txt)
-    # page_content = [
-    #     "The bank offers a variety of credit cards with different rewards programs.",
-    #     "Our savings accounts provide competitive interest rates.",
-    #     "The bank's mortgage plans include fixed and variable interest rate options.",
-    #     "Philippines is located in south east asia",
-    #     "The capital of the Philippines is Manila",
-    #     "chowpin is bald"
-    # ]
-    # metadata = [
-    #     {"source": "bank_product_guide"},
-    #     {"source": "bank_website"},
-    #     {"source": "mortgage_brochure"},
-    #     {"source": "wikipedia"},
-    #     {"source": "wikipedia"},
-    #     {"source": "barber_shop"}
-    # ]
+    print("Application startup")
+    yield
+    print("Application shutdown")
 
-    # Convert to a list of Document objects
-    # documents1 = [
-    #     Document(page_content=content, metadata=meta)
-    #     for content, meta in zip(page_content, metadata)
-    # ]
+# Create the FastAPI app
+app = FastAPI(title="My API", version="1.0.0", base_path="/api/v1", lifespan=lifespan)
+# Create a router with a prefix
+router = APIRouter(prefix="/api/v1")
 
-    # Query the retriever and generate responses using RAG
-    query_text = "when did James became 2 time nba champion?"
-    # # get similarities
-    response_similarities = question_answer.generate_similarities_with_score(query_text, top_k=5, filter_score=0.7)
+@router.post("/question_answer")
+async def question_answer(request: QuestionAnswerRequest):
+    # get similarities
+    response_similarities = app.state.question_answer.generate_similarities_with_score(request.prompt, top_k=5, filter_score=0.7)
 
     # get answer from LLM (final format)
     context = utils.format_context(response_similarities)
-    response_answer = question_answer.generate_response(query_text, context)
+    response_answer = app.state.question_answer.generate_response(request.prompt, context)
 
     print(f"\nQuery: {response_answer["query"]}")
     print(f"\nContext: {response_answer["context"]}")
     print(f"\nResult: {response_answer["result"]}")
     print(f"\nSource: {response_answer["source_documents"]}")
 
+    return JSONResponse({"response": 200})
+
+
+@router.post("/add_document")
+async def add_document(file: UploadFile = File(...)):
+    return JSONResponse({"result": 200})
+
+# Include the router into the FastAPI app
+app.include_router(router)
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
 
+    uvicorn.run(app, host="0.0.0.0", port=8000)
