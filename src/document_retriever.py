@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 
@@ -69,6 +70,10 @@ class DocumentRetriever:
 
         results = self.vector_store.similarity_search_with_score(query_text, top_k)
         filtered_results = [doc for doc, score in results if score < filter_score]
+
+        # If the response is empty, raise 404
+        if not filtered_results:
+            raise HTTPException(status_code=404, detail="No similar documents found.")
 
         return filtered_results
 
