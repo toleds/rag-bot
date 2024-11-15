@@ -66,7 +66,7 @@ async def question_answer(request: QuestionAnswerRequest):
 
 @router.post("/add_document")
 async def add_document(file: UploadFile = File(...)):
-    file_path = f"resources/{file.filename}"
+    file_path = f"resource/{file.filename}"
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     file_extension = file.filename.split(".")[-1]
