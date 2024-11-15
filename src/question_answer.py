@@ -12,7 +12,7 @@ class QuestionAnswer:
         """
         self.retriever = retriever
 
-    def generate_response(self, query_text: str, context: str) -> str:
+    def generate_response(self, query_text: str, context: str):
         """
         Generate QA answer
 

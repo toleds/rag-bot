@@ -49,15 +49,6 @@ def main():
     #     for content, meta in zip(page_content, metadata)
     # ]
 
-    # documents = utils.extract_text_from_pdf(pdf_path=pdf_path)
-    # documents2 = utils.extract_text_from_file(file_path="resources/lebron.txt")
-    # ===================================================================================
-
-    # Add documents to the retriever (vector store)
-    # print("Adding documents to the vector store...")
-    # document_retriever.add_documents(documents1, True)
-    # document_retriever.add_documents(documents2, True)
-
     # Query the retriever and generate responses using RAG
     query_text = "when did James became 2 time nba champion?"
     # # get similarities
@@ -70,6 +61,8 @@ def main():
     print(f"\nQuery: {response_answer["query"]}")
     print(f"\nContext: {response_answer["context"]}")
     print(f"\nResult: {response_answer["result"]}")
+    print(f"\nSource: {response_answer["source_documents"]}")
+
 
 if __name__ == "__main__":
     main()
