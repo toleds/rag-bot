@@ -62,10 +62,11 @@ def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap
 
     return text_chunks
 
-def get_vector_store(vector_store_type: str, data_path, embedding_model):
+def get_vector_store(vector_store_type: str, data_path, embedding_model, initialize: bool = False):
     """
     decide which vector store to use
 
+    :param initialize:
     :param vector_store_type:
     :param data_path:
     :param embedding_model:
@@ -73,9 +74,9 @@ def get_vector_store(vector_store_type: str, data_path, embedding_model):
     """
     # Decide which vector store to use (Chroma or FAISS)
     if vector_store_type == 'chroma':
-        return get_chroma_instance(data_path=data_path, embedding_model=embedding_model)
+        return get_chroma_instance(data_path=data_path, embedding_model=embedding_model, initialize=initialize)
     elif vector_store_type == 'faiss':
-        return get_faiss_instance(data_path=data_path, embedding_model=embedding_model)
+        return get_faiss_instance(data_path=data_path, embedding_model=embedding_model, initialize=initialize)
     else:
         raise ValueError(f"Unsupported vector store: {vector_store_type}")
 
@@ -113,42 +114,51 @@ def get_llm(llm_type: str, model_name: str, task: str, temperature: float = 0.5)
     else:
         raise ValueError(f"Unsupported llm: {llm_type}")
 
-def get_chroma_instance(data_path, embedding_model):
+def get_chroma_instance(data_path, embedding_model, initialize):
     """
     Initialize Chroma vector store.
 
+    :param initialize:
     :param data_path:
     :param embedding_model:
     :return:
     """
-    _verify_or_create_vector_store_folder(data_path)
-
     return Chroma(persist_directory=data_path, embedding_function=embedding_model)
 
-def get_faiss_instance(data_path, embedding_model):
+def _init_faiss_instance(embedding_model):
+    """
+    init faiss dbb
+    :param embedding_model:
+    :return:
+    """
+    # Initialize FAISS and save it
+    dimension = 768 # sentence-transformers/all-mpnet-base-v2
+    index = IndexFlatL2(dimension)
+    return FAISS(
+        embedding_function=embedding_model,
+        index=index,
+        docstore=InMemoryDocstore(),
+        index_to_docstore_id={})
+
+def get_faiss_instance(data_path, embedding_model, initialize):
     """
     Initialize FAISS vector store.
 
+    :param initialize:
     :param data_path:
     :param embedding_model:
     :return:
     """
-    _verify_or_create_vector_store_folder(data_path)
 
     # Check if the necessary files exist
-    if not os.path.exists(os.path.join(data_path, "index.faiss")) or not os.path.exists(os.path.join(data_path, "index.pkl")):
-        print("Files not found. Initializing a new FAISS index...")
+    if (not os.path.exists(os.path.join(data_path, "index.faiss"))
+            or not os.path.exists(os.path.join(data_path, "index.pkl"))
+            or initialize):
+        print("Initializing a new FAISS index...")
         # Initialize FAISS and save it
-        dimension = 768 # sentence-transformers/all-mpnet-base-v2
-        index = IndexFlatL2(dimension)
-        vector_store = FAISS(
-            embedding_function=embedding_model,
-            index=index,
-            docstore=InMemoryDocstore(),
-            index_to_docstore_id={})
-
+        vector_store = _init_faiss_instance(embedding_model)
         vector_store.save_local(data_path)
-        print("FAISS index and doc store have been saved.")
+        print("FAISS index and doc store have been initialized.")
     else:
         # Load existing vector store
         vector_store = FAISS.load_local(folder_path=data_path,
@@ -193,16 +203,6 @@ def get_hugging_face_llm(model_name: str, task: str, temperature: float = 0.5):
     :return:
     """
     return HuggingFaceHub(repo_id=model_name, task=task)
-
-def _verify_or_create_vector_store_folder(data_path):
-    """
-    Create or verify folder exists
-
-    :param data_path:
-    :return:
-    """
-    if not os.path.exists(data_path):
-        os.makedirs(data_path)
 
 def format_context(documents, truncate: bool = False):
     """
