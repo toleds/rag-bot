@@ -49,3 +49,15 @@ class QuestionAnswer:
         response = self.retriever.search_with_score(query_text, top_k, filter_score)
 
         return response
+
+    def generate_similarities_with_score_no_filter(self, query_text: str, top_k: int = 2):
+        """
+        Generate a response using the RAG pipeline.
+
+        :param query_text: The user's input query.
+        :param top_k: Number of top documents to retrieve.
+        :return: Generated response similarity text.
+        """
+        response = self.retriever.search_with_score_no_fiter(query_text, top_k)
+
+        return response

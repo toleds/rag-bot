@@ -77,6 +77,23 @@ class DocumentRetriever:
 
         return filtered_results
 
+    def search_with_score_no_fiter(self, query_text: str, top_k: int = 3):
+        """
+        Search the vector store.
+
+        :param query_text:
+        :param top_k:
+        :return:
+        """
+
+        results = self.vector_store.similarity_search_with_score(query_text, top_k)
+
+        # If the response is empty, raise 404
+        if not results:
+            raise HTTPException(status_code=404, detail="No similar documents found.  Kindly refine your query.")
+
+        return results
+
     def question_answer(self, query_text: str, context: str):
         """
         QA the LLM

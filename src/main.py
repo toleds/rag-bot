@@ -1,3 +1,4 @@
+import json
 import os
 from contextlib import asynccontextmanager
 
@@ -64,6 +65,24 @@ async def question_answer(request: QuestionAnswerRequest):
             answer=response_answer["result"],
             source=response_answer["source_documents"]
         )
+
+
+@router.get("/similarity-search")
+async  def similarity_search(prompt: str):
+    # get similarities
+    response_similarities = app.state.question_answer.generate_similarities_with_score_no_filter(prompt, top_k=10)
+
+    # Extract document fields and score into a dictionary
+    response_data = [
+        {
+            "document": doc.page_content,        # Assuming the content of the document
+            "metadata": doc.metadata,            # Document metadata (like source, author, etc.)
+            "score": f"{score}"                  # Similarity score
+        }
+        for (doc, score) in response_similarities
+    ]
+
+    return JSONResponse(content={"similarity_search": response_data}, status_code=status.HTTP_200_OK)
 
 
 @router.post("/add-document")
