@@ -34,6 +34,7 @@ class QuestionAnswer:
         :return: Generated response similarity text.
         """
         response = self.retriever.search(query_text, top_k)
+
         return response
 
     def generate_similarities_with_score(self, query_text: str, top_k: int = 2, filter_score: float = 0.7):
@@ -46,8 +47,5 @@ class QuestionAnswer:
         :return: Generated response similarity text.
         """
         response = self.retriever.search_with_score(query_text, top_k, filter_score)
-
-        # Print the retrieved documents to inspect their structure
-        print(f"Retrieved documents: {response}")
 
         return response
