@@ -134,6 +134,9 @@ def _init_faiss_instance(embedding_model):
     # Initialize FAISS and save it
     dimension = 768 # sentence-transformers/all-mpnet-base-v2
     index = IndexFlatL2(dimension)
+    # always reset
+    index.reset()
+
     return FAISS(
         embedding_function=embedding_model,
         index=index,

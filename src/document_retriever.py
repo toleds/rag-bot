@@ -12,14 +12,15 @@ class DocumentRetriever:
         Initialize the Universal Retriever that can work with either Chroma or FAISS.
         : param config: the configuration setup.
         """
-        self.embedding_type = utils.get_embedding_model(config.embeddings.embedding_type, config.embeddings.embedding_model)
+        self.config = config
+        self.embedding_model = utils.get_embedding_model(config.embeddings.embedding_type, config.embeddings.embedding_model)
         self.vector_store_type = config.vector_store.vector_type
         self.data_path = config.vector_store.data_path
 
         # get the vector store instance
         self.vector_store = utils.get_vector_store(vector_store_type=config.vector_store.vector_type,
                                                    data_path=config.vector_store.data_path,
-                                                   embedding_model=self.embedding_type)
+                                                   embedding_model=self.embedding_model)
 
         # Initialize the language model (OpenAI for QA)
         self.llm = utils.get_llm(llm_type=config.llms.llm_type,
@@ -115,4 +116,10 @@ class DocumentRetriever:
             pass
         elif self.vector_store_type == 'faiss':
             self.vector_store.save_local(self.data_path)  # FAISS uses save_local
+
+    def initialize_vector_store(self):
+        self.vector_store = utils.get_vector_store(vector_store_type=self.config.vector_store.vector_type,
+                                                   data_path=self.config.vector_store.data_path,
+                                                   embedding_model=self.embedding_model,
+                                                   initialize=True)
 

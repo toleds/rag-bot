@@ -1,4 +1,3 @@
-import json
 import os
 from contextlib import asynccontextmanager
 
@@ -106,6 +105,11 @@ async def add_document(file: UploadFile = File(...)):
     app.state.document_retriever.add_documents(document, True)
 
     return JSONResponse(content={"message": "File uploaded successfully.  Processing initiated."}, status_code=status.HTTP_202_ACCEPTED)
+
+@router.post("/initialize-vector-store")
+async def initialize_db():
+    app.state.document_retriever.initialize_vector_store()
+    return {"status": "Vector store initialized!"}
 
 # Include the router into the FastAPI app
 app.include_router(router)
