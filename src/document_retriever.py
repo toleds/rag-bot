@@ -1,7 +1,7 @@
 from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 
-import os, utils
+import utils
 from src.config import AppConfig
 
 
