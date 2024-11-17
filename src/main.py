@@ -53,23 +53,23 @@ router = APIRouter(prefix="/api/v1")
 @router.post("/question-answer")
 async def question_answer(request: QuestionAnswerRequest):
     # get similarities
-    response_similarities = app.state.question_answer.generate_similarities_with_score(request.question, top_k=5, filter_score=1.0)
+    response_similarities = app.state.question_answer.generate_similarities_with_score(request.query, top_k=5, filter_score=1.0)
 
     # get answer from LLM (final format)
     context = utils.format_context(response_similarities)
     response_answer = app.state.question_answer.generate_response(request.question, context)
 
     return QuestionAnswerResponse(
-            question=response_answer["query"],
-            answer=response_answer["result"],
+            query=response_answer["query"],
+            result=response_answer["result"],
             source=response_answer["source_documents"]
         )
 
 
 @router.get("/similarity-search")
-async  def similarity_search(prompt: str):
+async  def similarity_search(query: str):
     # get similarities
-    response_similarities = app.state.question_answer.generate_similarities_with_score_no_filter(prompt, top_k=10)
+    response_similarities = app.state.question_answer.generate_similarities_with_score_no_filter(query, top_k=10)
 
     # Extract document fields and score into a dictionary
     response_data = [

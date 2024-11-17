@@ -2,9 +2,9 @@ from pydantic import BaseModel
 from langchain_core.documents import Document
 
 class QuestionAnswerRequest(BaseModel):
-    question: str
+    query: str
 
 class QuestionAnswerResponse(BaseModel):
-    question: str
-    answer: str
+    query: str
+    result: str
     source: list[Document]
