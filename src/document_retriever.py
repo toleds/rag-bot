@@ -35,7 +35,8 @@ class DocumentRetriever:
         self.llm = utils.get_llm(llm_type=config.llms.llm_type,
                                  model_name=config.llms.model_name,
                                  task=config.llms.task,
-                                 temperature=config.llms.temperature)
+                                 temperature=config.llms.temperature,
+                                 local_server=self.config.llms.local_server)
 
         # Set up the RetrievalQA chain
         self.qa = RetrievalQA.from_chain_type(llm=self.llm,

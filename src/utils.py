@@ -34,7 +34,7 @@ def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: 
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
                                                    chunk_overlap=chunk_overlap,
-                                                   length_function=len(),
+                                                   length_function=len,
                                                    is_separator_regex=False)
 
     # Split the text into chunks
@@ -61,7 +61,7 @@ def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
                                                    chunk_overlap=chunk_overlap,
-                                                   length_function=len(),
+                                                   length_function=len,
                                                    is_separator_regex=False)
 
     # Split the text into chunks
@@ -104,10 +104,11 @@ def get_embedding_model(embedding_type: str = "openai", embedding_model: str = "
     else:
         raise ValueError(f"Unsupported embedding: {embedding_model}")
 
-def get_llm(llm_type: str, model_name: str, task: str, temperature: float = 0.5):
+def get_llm(llm_type: str, model_name: str, task: str, local_server: str, temperature: float = 0.5):
     """
     decide which LLM to use
 
+    :param local_server:
     :param task:
     :param model_name:
     :param llm_type:
@@ -120,7 +121,7 @@ def get_llm(llm_type: str, model_name: str, task: str, temperature: float = 0.5)
     elif llm_type == "huggingface":
         return get_hugging_face_llm(model_name=model_name, task=task, temperature=temperature)
     elif llm_type == "ollama":
-        return get_ollama_llm(model_name= model_name, task=task, temperature=temperature)
+        return get_ollama_llm(model_name= model_name, task=task, temperature=temperature, local_server=local_server)
     else:
         raise ValueError(f"Unsupported llm: {llm_type}")
 
@@ -217,16 +218,17 @@ def get_hugging_face_llm(model_name: str, task: str, temperature: float = 0.5):
     """
     return HuggingFaceHub(repo_id=model_name, task=task)
 
-def get_ollama_llm(model_name: str, task: str, temperature: float = 0.5):
+def get_ollama_llm(model_name: str, task: str, temperature: float, local_server: str):
     """
 
+    :param local_server:
     :param model_name:
     :param task:
     :param temperature:
     :return:
     """
 
-    return Ollama(model=model_name)
+    return Ollama(model=model_name, base_url=local_server)
 
 def format_context(documents, truncate: bool = False):
     """
