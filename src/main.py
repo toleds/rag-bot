@@ -57,7 +57,7 @@ async def question_answer(request: QuestionAnswerRequest):
 
     # get answer from LLM (final format)
     context = utils.format_context(response_similarities)
-    response_answer = app.state.question_answer.generate_response(request.question, context)
+    response_answer = app.state.question_answer.generate_response(request.query, context)
 
     return QuestionAnswerResponse(
             query=response_answer["query"],
