@@ -1,5 +1,4 @@
 import os
-from itertools import takewhile
 
 from typing import List
 from langchain.text_splitter import RecursiveCharacterTextSplitter
