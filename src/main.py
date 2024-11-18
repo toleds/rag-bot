@@ -87,14 +87,17 @@ async  def similarity_search(query: str):
 @router.post("/add-document")
 async def add_document(file: UploadFile = File(...)):
     file_path = f"{app.state.app_config.vector_store.resource_path}/{file.filename}"
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
     file_extension = file.filename.split(".")[-1]
 
     if "txt" in file_extension:
+        with open(file_path, "w", encoding="utf8") as buffer:
+            buffer.write(file.file.read().decode("utf-8"))
+
         document = utils.extract_text_from_file(file_path=file_path)
     elif "pdf" in file_extension:
+        with open(file_path, "wb",) as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
         document = utils.extract_text_from_pdf(pdf_path=file_path)
     else:
         raise HTTPException(

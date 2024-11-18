@@ -51,7 +51,7 @@ def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap
         raise FileNotFoundError(f"Text file not found: {file_path}")
 
     # Load the file
-    loader = TextLoader(file_path)
+    loader = TextLoader(file_path, encoding="utf-8")
     documents = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, separators=["\n\n", "\n", " ", ""])
@@ -132,7 +132,7 @@ def _init_faiss_instance(embedding_model):
     :return:
     """
     # Initialize FAISS and save it
-    dimension = 768 # sentence-transformers/all-mpnet-base-v2
+    dimension = 384
     index = IndexFlatL2(dimension)
     # always reset
     index.reset()
