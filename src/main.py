@@ -53,11 +53,10 @@ router = APIRouter(prefix="/api/v1")
 @router.post("/question-answer")
 async def question_answer(request: QuestionAnswerRequest):
     # get similarities
-    response_similarities = app.state.question_answer.generate_similarities_with_score(request.query, top_k=5, filter_score=1.0)
+    response_similarities = app.state.question_answer.generate_similarities_with_score(request.query, filter_score=1.0)
 
     # get answer from LLM (final format)
-    context = utils.format_context(response_similarities)
-    response_answer = app.state.question_answer.generate_response(request.query, context)
+    response_answer = app.state.question_answer.generate_response(request.query, response_similarities)
 
     return QuestionAnswerResponse(
             query=response_answer["query"],

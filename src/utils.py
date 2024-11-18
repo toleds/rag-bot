@@ -1,8 +1,10 @@
 import os
+from itertools import takewhile
 
 from typing import List
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.llms.huggingface_hub import HuggingFaceHub
+from langchain_community.llms.ollama import Ollama
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_chroma import Chroma
@@ -30,7 +32,10 @@ def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: 
     loader = PyPDFLoader(pdf_path)
     documents = loader.load()
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, separators=["\n\n", "\n", " ", ""])
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
+                                                   chunk_overlap=chunk_overlap,
+                                                   length_function=len(),
+                                                   is_separator_regex=False)
 
     # Split the text into chunks
     text_chunks = text_splitter.split_documents(documents)
@@ -54,7 +59,10 @@ def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap
     loader = TextLoader(file_path, encoding="utf-8")
     documents = loader.load()
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, separators=["\n\n", "\n", " ", ""])
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
+                                                   chunk_overlap=chunk_overlap,
+                                                   length_function=len(),
+                                                   is_separator_regex=False)
 
     # Split the text into chunks
     text_chunks = text_splitter.split_documents(documents)
@@ -111,6 +119,8 @@ def get_llm(llm_type: str, model_name: str, task: str, temperature: float = 0.5)
         return get_openai_llm(model_name=model_name, temperature=temperature)
     elif llm_type == "huggingface":
         return get_hugging_face_llm(model_name=model_name, task=task, temperature=temperature)
+    elif llm_type == "ollama":
+        return get_ollama_llm(model_name= model_name, task=task, temperature=temperature)
     else:
         raise ValueError(f"Unsupported llm: {llm_type}")
 
@@ -207,6 +217,17 @@ def get_hugging_face_llm(model_name: str, task: str, temperature: float = 0.5):
     """
     return HuggingFaceHub(repo_id=model_name, task=task)
 
+def get_ollama_llm(model_name: str, task: str, temperature: float = 0.5):
+    """
+
+    :param model_name:
+    :param task:
+    :param temperature:
+    :return:
+    """
+
+    return Ollama(model=model_name)
+
 def format_context(documents, truncate: bool = False):
     """
     reformat document to String
@@ -216,10 +237,10 @@ def format_context(documents, truncate: bool = False):
     :return:
     """
     # Use only the top 1 or 2 most relevant documents
-    context = " ".join(doc.page_content.strip() for doc in documents)
+    context = "\n\n---\n\n ".join([doc.page_content for doc in documents])
 
     # Truncate the context if it exceeds max_length
-    if len(context) > 1000 and truncate:
-        context = context[:1000]
+    # if len(context) > 1000 and truncate:
+    #     context = context[:1000]
 
     return context
