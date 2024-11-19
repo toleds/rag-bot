@@ -1,7 +1,7 @@
 llms:
   llm_type: "ollama" # openai, huggingface, ollama (local llm only)
   temperature: 0.5
-  model_name: "mistral"  # facebook/bart-large-cnn
+  model_name: "mistral"  # facebook/bart-large-cnn mistral sshleifer/distilbart-cnn-12-6
   task: "summarization"
 #  api_key: "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"
   api_key: "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"
