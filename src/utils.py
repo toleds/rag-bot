@@ -69,10 +69,11 @@ def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap
 
     return text_chunks
 
-def get_vector_store(vector_store_type: str, data_path, embedding_model, initialize: bool = False):
+def get_vector_store(vector_store_type: str, data_path, embedding_model, dimension: int, initialize: bool = False):
     """
     decide which vector store to use
 
+    :param dimension:
     :param initialize:
     :param vector_store_type:
     :param data_path:
@@ -81,9 +82,9 @@ def get_vector_store(vector_store_type: str, data_path, embedding_model, initial
     """
     # Decide which vector store to use (Chroma or FAISS)
     if vector_store_type == 'chroma':
-        return get_chroma_instance(data_path=data_path, embedding_model=embedding_model, initialize=initialize)
+        return get_chroma_instance(data_path=data_path, embedding_model=embedding_model)
     elif vector_store_type == 'faiss':
-        return get_faiss_instance(data_path=data_path, embedding_model=embedding_model, initialize=initialize)
+        return get_faiss_instance(data_path=data_path, embedding_model=embedding_model, initialize=initialize, dimension=dimension)
     else:
         raise ValueError(f"Unsupported vector store: {vector_store_type}")
 
@@ -103,46 +104,42 @@ def get_embedding_model(embedding_type: str = "openai", embedding_model: str = "
     else:
         raise ValueError(f"Unsupported embedding: {embedding_model}")
 
-def get_llm(llm_type: str, model_name: str, task: str, local_server: str, temperature: float = 0.5):
+def get_llm(llm_type: str, model_name: str, local_server: str):
     """
     decide which LLM to use
 
     :param local_server:
-    :param task:
     :param model_name:
     :param llm_type:
-    :param temperature:
     :return:
     """
     # Decide which llm to use
     if llm_type == "openai":
-        return get_openai_llm(model_name=model_name, temperature=temperature)
+        return get_openai_llm(model_name=model_name)
     elif llm_type == "huggingface":
-        return get_hugging_face_llm(model_name=model_name, task=task, temperature=temperature)
+        return get_hugging_face_llm(model_name=model_name)
     elif llm_type == "ollama":
-        return get_ollama_llm(model_name= model_name, task=task, temperature=temperature, local_server=local_server)
+        return get_ollama_llm(model_name= model_name, local_server=local_server)
     else:
         raise ValueError(f"Unsupported llm: {llm_type}")
 
-def get_chroma_instance(data_path, embedding_model, initialize):
+def get_chroma_instance(data_path, embedding_model):
     """
     Initialize Chroma vector store.
 
-    :param initialize:
     :param data_path:
     :param embedding_model:
     :return:
     """
     return Chroma(persist_directory=data_path, embedding_function=embedding_model)
 
-def _init_faiss_instance(embedding_model):
+def _init_faiss_instance(embedding_model, dimension: int):
     """
     init faiss dbb
     :param embedding_model:
     :return:
     """
     # Initialize FAISS and save it
-    dimension = 384
     index = IndexFlatL2(dimension)
     # always reset
     index.reset()
@@ -153,10 +150,11 @@ def _init_faiss_instance(embedding_model):
         docstore=InMemoryDocstore(),
         index_to_docstore_id={})
 
-def get_faiss_instance(data_path, embedding_model, initialize):
+def get_faiss_instance(data_path, embedding_model, initialize, dimension: int):
     """
     Initialize FAISS vector store.
 
+    :param dimension:
     :param initialize:
     :param data_path:
     :param embedding_model:
@@ -169,7 +167,7 @@ def get_faiss_instance(data_path, embedding_model, initialize):
             or initialize):
         print("Initializing a new FAISS index...")
         # Initialize FAISS and save it
-        vector_store = _init_faiss_instance(embedding_model)
+        vector_store = _init_faiss_instance(embedding_model, dimension)
         vector_store.save_local(data_path)
         print("FAISS index and doc store have been initialized.")
     else:
@@ -197,33 +195,28 @@ def get_huggingface_embedding(embedding_model: str = "sentence-transformers/all-
     """
     return HuggingFaceEmbeddings(model_name = embedding_model)
 
-def get_openai_llm(model_name: str, temperature: float = 0.5):
+def get_openai_llm(model_name: str):
     """
 
     :param model_name:
-    :param temperature:
     :return:
     """
-    return OpenAI(model_name=model_name, temperature=temperature)
+    return OpenAI(model_name=model_name)
 
-def get_hugging_face_llm(model_name: str, task: str, temperature: float = 0.5):
+def get_hugging_face_llm(model_name: str):
     """
     HuggingFace LLM
 
-    :param task:
     :param model_name:
-    :param temperature:
     :return:
     """
-    return HuggingFaceHub(repo_id=model_name, task=task)
+    return HuggingFaceHub(repo_id=model_name)
 
-def get_ollama_llm(model_name: str, task: str, temperature: float, local_server: str):
+def get_ollama_llm(model_name: str, local_server: str):
     """
 
     :param local_server:
     :param model_name:
-    :param task:
-    :param temperature:
     :return:
     """
 

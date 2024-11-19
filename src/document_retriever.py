@@ -29,13 +29,12 @@ class DocumentRetriever:
         # get the vector store instance
         self.vector_store = utils.get_vector_store(vector_store_type=config.vector_store.vector_type,
                                                    data_path=config.vector_store.data_path,
+                                                   dimension=config.embeddings.dimension,
                                                    embedding_model=self.embedding_model)
 
         # Initialize the language model (OpenAI for QA)
         self.llm = utils.get_llm(llm_type=config.llms.llm_type,
                                  model_name=config.llms.model_name,
-                                 task=config.llms.task,
-                                 temperature=config.llms.temperature,
                                  local_server=self.config.llms.local_server)
 
         # Set up the RetrievalQA chain
@@ -80,11 +79,12 @@ class DocumentRetriever:
         if store_documents:
             self.store_documents()
 
+        print("Documents stored successfully.")
+
     def search(self, query_text: str):
         """
         Search the vector store.
 
-        :param k:
         :param query_text:
         :return:
         """
@@ -95,7 +95,6 @@ class DocumentRetriever:
         """
         Search the vector store.
 
-        :param k:
         :param filter_score:
         :param query_text:
         :return:
@@ -113,7 +112,6 @@ class DocumentRetriever:
         """
         Search the vector store.
 
-        :param k:
         :param query_text:
         :return:
         """
@@ -156,5 +154,6 @@ class DocumentRetriever:
         self.vector_store = utils.get_vector_store(vector_store_type=self.config.vector_store.vector_type,
                                                    data_path=self.config.vector_store.data_path,
                                                    embedding_model=self.embedding_model,
+                                                   dimension=self.config.embeddings.dimension,
                                                    initialize=True)
 

@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 import utils
 import shutil
-from fastapi import FastAPI, UploadFile, File, APIRouter, HTTPException, status
+from fastapi import FastAPI, UploadFile, File, APIRouter, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 
 from config import AppConfig
@@ -106,7 +106,7 @@ async def add_document(file: UploadFile = File(...)):
 
     app.state.document_retriever.add_documents(document, True)
 
-    return JSONResponse(content={"message": "File uploaded successfully.  Processing initiated."}, status_code=status.HTTP_202_ACCEPTED)
+    return JSONResponse(content={"message": "Documents uploaded and added successfully. ."}, status_code=status.HTTP_202_ACCEPTED)
 
 @router.post("/initialize-vector-store")
 async def initialize_db():
