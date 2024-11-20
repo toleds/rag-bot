@@ -14,7 +14,7 @@ from fastapi import (
     status
 )
 
-router = APIRouter(tags=["Document Retriever"])
+router = APIRouter(tags=["Document-Retriever"])
 executor = ThreadPoolExecutor()
 
 @router.get("/similarity-search")

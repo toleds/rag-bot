@@ -10,7 +10,7 @@ from fastapi import (
     status
 )
 
-router = APIRouter(tags=["Document Retriever"])
+router = APIRouter(tags=["Question-Answer"])
 
 @router.post("/question-answer")
 async def question_answer(request: QuestionAnswerRequest):
