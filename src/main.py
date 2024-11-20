@@ -1,4 +1,5 @@
 import os
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
 import utils
@@ -49,6 +50,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="RAG-Bot", version="1.0.0", base_path="/api/v1", lifespan=lifespan)
 # Create a router with a prefix
 router = APIRouter(prefix="/api/v1")
+executor = ThreadPoolExecutor()
 
 @router.post("/question-answer")
 async def question_answer(request: QuestionAnswerRequest):
@@ -83,6 +85,10 @@ async  def similarity_search(query: str):
     return JSONResponse(content={"similarity_search": response_data}, status_code=status.HTTP_200_OK)
 
 
+def process_document(file_extension: str, file_path: str):
+    document = utils.extract_text_from_file(file_path=file_path) if "txt" in file_extension else utils.extract_text_from_pdf(pdf_path=file_path)
+    app.state.document_retriever.add_documents(document, True)
+
 @router.post("/add-document")
 async def add_document(file: UploadFile = File(...)):
     file_path = f"{app.state.app_config.vector_store.resource_path}/{file.filename}"
@@ -91,22 +97,19 @@ async def add_document(file: UploadFile = File(...)):
     if "txt" in file_extension:
         with open(file_path, "w", encoding="utf8") as buffer:
             buffer.write(file.file.read().decode("utf-8"))
-
-        document = utils.extract_text_from_file(file_path=file_path)
     elif "pdf" in file_extension:
         with open(file_path, "wb",) as buffer:
             shutil.copyfileobj(file.file, buffer)
-
-        document = utils.extract_text_from_pdf(pdf_path=file_path)
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"The file extension is not valid.: {file_extension}",
         )
+    # Schedule background processing
+    executor.submit(process_document, file_extension, file_path)
 
-    app.state.document_retriever.add_documents(document, True)
-
-    return JSONResponse(content={"message": "Documents uploaded and added successfully. ."}, status_code=status.HTTP_202_ACCEPTED)
+    return JSONResponse(content={"message": "Documents uploaded successfully.  Document embedding ongoing and will be available in a while."},
+                        status_code=status.HTTP_202_ACCEPTED)
 
 @router.post("/initialize-vector-store")
 async def initialize_db():
