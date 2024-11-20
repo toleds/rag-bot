@@ -62,7 +62,7 @@ async def question_answer(request: QuestionAnswerRequest):
     source = [
         {"source": doc.metadata["source"], "page": doc.metadata["page"]}
         for doc in response_answer["source_documents"]
-    ]
+    ] if response_answer["source_documents"] is not None else None
 
     return QuestionAnswerResponse(
             query=request.query,
