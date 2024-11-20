@@ -7,4 +7,4 @@ class QuestionAnswerRequest(BaseModel):
 class QuestionAnswerResponse(BaseModel):
     query: str
     result: str
-    source: list[Document]
+    source: list
