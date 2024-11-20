@@ -1,9 +1,8 @@
 llms:
-  llm_type: "huggingface" # openai, huggingface, ollama (local llm server)
+  llm_type: "ollama" # openai, huggingface, ollama (local llm server)
   temperature: 1.5
-  model_name: "meta-llama/Llama-3.2-1B"
-#  api_key: "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"
-  api_key: "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"
+  model_name: "mistral"
+  api_key: "<openai or huggingface key>"
   local_server: "http://localhost:11434" # for ollama local server only
 
 vector_store:
