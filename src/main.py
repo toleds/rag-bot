@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 import utils
 import shutil
-from fastapi import FastAPI, UploadFile, File, APIRouter, HTTPException, status, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 
 from config import AppConfig
@@ -58,10 +58,16 @@ async def question_answer(request: QuestionAnswerRequest):
     # get answer from LLM (final format)
     response_answer = app.state.question_answer.generate_response(request.query, response_similarities)
 
+    # Extract only `source` and `page` fields
+    source = [
+        {"source": doc.metadata["source"], "page": doc.metadata["page"]}
+        for doc in response_answer["source_documents"]
+    ] if response_answer["source_documents"] is not None else None
+
     return QuestionAnswerResponse(
-            query=response_answer["query"],
+            query=request.query,
             result=response_answer["result"],
-            source=response_answer["source_documents"]
+            source=source
         )
 
 
