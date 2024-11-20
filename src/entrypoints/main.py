@@ -2,22 +2,19 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
-import utils
+from common import utils
 import shutil
 from fastapi import FastAPI, UploadFile, File, APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 
-from config import AppConfig
-from document_retriever import DocumentRetriever
-from question_answer import QuestionAnswer
-from model import QuestionAnswerRequest, QuestionAnswerResponse
+from config import config
+from application.document_retriever import DocumentRetriever
+from application.question_answer import QuestionAnswer
+from domain.model import QuestionAnswerRequest, QuestionAnswerResponse
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Load configuration
-    config = AppConfig.from_yaml("config.yaml")
-
     # Ensure the directory exists
     if not os.path.exists(config.vector_store.data_path):
         os.makedirs(config.vector_store.data_path)

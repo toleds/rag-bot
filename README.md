@@ -17,7 +17,7 @@ The diagram below defines the flow.
 
 Below is a sample response from a user's query.
 
-```
+```yaml
 {
     "query": "show me a sample code related VanillaOption Header File?",
     "result": " Here is a sample of the `VanillaOption Header File` from the provided context, which declares the `VanillaOption` class:\n\n```cpp\n// VanillaOption Header File\n#ifndef VANILLOPTION_HPP\n#define VANILLOPTION_HPP\n\nclass VanillaOption {\npublic:\n    // Constructor and Destructor\n    VanillaOption(double strike, double timeToExpiry, const std::string& optionType);\n    virtual ~VanillaOption();\n\n    // Accessors and Mutators\n    double getStrike() const;\n    double getTimeToExpiry() const;\n    const std::string& getOptionType() const;\n\n    // Option price calculation methods (declared but not implemented in the header file)\n    virtual double calcCall() const = 0;\n    virtual double calcPut() const = 0;\n\nprivate:\n    double _strike;      // Strike Price\n    double _timeToExpiry; // Time to Expiry\n    std::string _optionType;   // Option Type (e.g., Call or Put)\n};\n\n#endif // VANILLOPTION_HPP\n```\n\nThis header file declares the `VanillaOption` class, which includes a constructor, destructor, accessors, and two pure virtual functions to calculate call and put option prices. These pure virtual functions are later implemented in derived classes like PayOffCall and PayOffPut.",
@@ -53,7 +53,8 @@ dot product, or Euclidean distance.
 
 the application currently supports **Chroma** and **FAISS** vector store.
 
-```vector_store:
+```yaml
+vector_store:
   vector_type: "faiss"  # Options: "chroma", "faiss"
   data_path: "./db"
   resource_path: "./resource"
@@ -68,7 +69,7 @@ For example:
 - These embeddings are generated using pre-trained models (like those from HuggingFace, OpenAI, or Ollama) and are essential for tasks like 
   semantic search, recommendation systems, and question-answering.
 
-```
+```yaml
 embeddings:
   embedding_type: "huggingface" # huggingface=HuggingFaceEmbeddings, openai=OpenAIEmbeddings, etc
   embedding_model: "sentence-transformers/all-mpnet-base-v2"
@@ -90,7 +91,7 @@ It can process, interpret, and generate text based on the context it has learned
 wide range of tasks, such as answering questions, summarizing text, translating languages, and even creating content. They work by predicting the next word 
 in a sequence based on the patterns they’ve learned during training, making them powerful tools for natural language understanding and generation.
 
-```
+```yaml
 llms:
   llm_type: "ollama" # openai, huggingface, ollama (local llm server)
   temperature: 1.5
@@ -153,7 +154,9 @@ Set the environment variable
 
 To launch the application locally, simply:
 
-```python -m src\main.py```
+```commandline
+python -m main.py
+```
 
 ## OpenAPI Docs
 

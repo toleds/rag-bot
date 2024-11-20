@@ -1,34 +1,36 @@
-import yaml
+from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+from pydantic import ValidationError
 
+load_dotenv()
 
-class VectorStoreConfig:
-    def __init__(self, vector_type: str, data_path: str, resource_path: str):
-        self.vector_type = vector_type
-        self.data_path = data_path
-        self.resource_path = resource_path
+class VectorStoreConfig(BaseSettings):
+    vector_type: str
+    data_path: str
+    resource_path: str
 
-class LlmConfig:
-    def __init__(self, llm_type: str, temperature: float, model_name: str, api_key: str, local_server: str):
-        self.llm_type = llm_type
-        self.temperature = temperature
-        self.model_name = model_name
-        self.api_key = api_key
-        self.local_server = local_server
+class LlmConfig(BaseSettings):
+    llm_type: str
+    temperature: float
+    llm_name: str
+    api_key: str
+    local_server: str
 
-class Embeddings:
-    def __init__(self, embedding_model: str, embedding_type: str, dimension: int):
-        self.embedding_model =  embedding_model
-        self.embedding_type = embedding_type
-        self.dimension = dimension
+class Embeddings(BaseSettings):
+    embedding_model: str
+    embedding_type: str
+    dimension: int
 
-class AppConfig:
-    def __init__(self, vector_store: dict, llms: dict, embeddings: dict):
-        self.vector_store = VectorStoreConfig(**vector_store)
-        self.llms = LlmConfig(**llms)
-        self.embeddings = Embeddings(**embeddings)
+class AppConfig(BaseSettings):
+    vector_store: VectorStoreConfig
+    llms: LlmConfig
+    embeddings: Embeddings
 
-    @staticmethod
-    def from_yaml(file_path: str) -> "AppConfig":
-        with open(file_path, 'r') as file:
-            config = yaml.safe_load(file)
-        return AppConfig(**config)
+    class Config:
+        env_file = "/.env"  # Specify the path to your .env file
+        env_nested_delimiter = "__"  # Allow nested environment variable syntax
+
+try:
+    config = AppConfig()
+except ValidationError as err:
+    raise RuntimeError(f"Invalid configuration: {err}") from err

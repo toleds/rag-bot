@@ -3,8 +3,8 @@ from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 from langchain_core.prompts import ChatPromptTemplate
 
-import utils
-from src.config import AppConfig
+from common import utils
+from config import AppConfig
 
 
 class DocumentRetriever:
@@ -36,7 +36,7 @@ class DocumentRetriever:
 
         # Initialize the language model (OpenAI for QA)
         self.llm = utils.get_llm(llm_type=config.llms.llm_type,
-                                 model_name=config.llms.model_name,
+                                 model_name=config.llms.llm_name,
                                  local_server=self.config.llms.local_server)
 
         # Set up the RetrievalQA chain
