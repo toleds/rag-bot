@@ -58,9 +58,7 @@ async def question_answer(request: QuestionAnswerRequest):
     # get answer from LLM (final format)
     response_answer = app.state.question_answer.generate_response(request.query, response_similarities)
 
-    print(response_answer["result"])
-
-    # Extract only `source` and `id` fields
+    # Extract only `source` and `page` fields
     source = [
         {"source": doc.metadata["source"], "page": doc.metadata["page"]}
         for doc in response_answer["source_documents"]
