@@ -2,7 +2,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
-from common import utils
+from common import file_utils
 import shutil
 from fastapi import FastAPI, UploadFile, File, APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
@@ -51,8 +51,13 @@ executor = ThreadPoolExecutor()
 
 @router.post("/question-answer")
 async def question_answer(request: QuestionAnswerRequest):
+    """
+
+    :param request:
+    :return:
+    """
     # get similarities
-    response_similarities = app.state.question_answer.generate_similarities(request.query)
+    response_similarities = app.state.document_retriever.search(request.query)
 
     # get answer from LLM (final format)
     response_answer = app.state.question_answer.generate_response(request.query, response_similarities)
@@ -72,8 +77,13 @@ async def question_answer(request: QuestionAnswerRequest):
 
 @router.get("/similarity-search")
 async  def similarity_search(query: str):
+    """
+
+    :param query:
+    :return:
+    """
     # get similarities
-    response_similarities = app.state.question_answer.generate_similarities_with_score_no_filter(query)
+    response_similarities = app.state.document_retriever.search_with_score_no_fiter(query)
 
     # Extract document fields and score into a dictionary
     response_data = [
@@ -89,11 +99,16 @@ async  def similarity_search(query: str):
 
 
 def process_document(file_extension: str, file_path: str):
-    document = utils.extract_text_from_file(file_path=file_path) if "txt" in file_extension else utils.extract_text_from_pdf(pdf_path=file_path)
+    document = file_utils.extract_text_from_file(file_path=file_path) if "txt" in file_extension else file_utils.extract_text_from_pdf(pdf_path=file_path)
     app.state.document_retriever.add_documents(document, True)
 
 @router.post("/add-document")
 async def add_document(file: UploadFile = File(...)):
+    """
+
+    :param file:
+    :return:
+    """
     file_path = f"{app.state.app_config.vector_store.resource_path}/{file.filename}"
     file_extension = file.filename.split(".")[-1]
 
@@ -116,6 +131,10 @@ async def add_document(file: UploadFile = File(...)):
 
 @router.post("/initialize-vector-store")
 async def initialize_db():
+    """
+
+    :return:
+    """
     app.state.document_retriever.initialize_vector_store()
     return {"status": "Vector store initialized!"}
 

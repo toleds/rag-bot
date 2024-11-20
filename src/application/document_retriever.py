@@ -3,7 +3,7 @@ from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 from langchain_core.prompts import ChatPromptTemplate
 
-from common import utils
+from common import utils, vector_utils, llm_utils
 from config import AppConfig
 
 
@@ -24,18 +24,18 @@ class DocumentRetriever:
         Use markdown formatting on the response.
         """
         self.config = config
-        self.embedding_model = utils.get_embedding_model(config.embeddings.embedding_type, config.embeddings.embedding_model)
+        self.embedding_model = llm_utils.get_embedding_model(config.embeddings.embedding_type, config.embeddings.embedding_model)
         self.vector_store_type = config.vector_store.vector_type
         self.data_path = config.vector_store.data_path
 
         # get the vector store instance
-        self.vector_store = utils.get_vector_store(vector_store_type=config.vector_store.vector_type,
+        self.vector_store = vector_utils.get_vector_store(vector_store_type=config.vector_store.vector_type,
                                                    data_path=config.vector_store.data_path,
                                                    dimension=config.embeddings.dimension,
                                                    embedding_model=self.embedding_model)
 
         # Initialize the language model (OpenAI for QA)
-        self.llm = utils.get_llm(llm_type=config.llms.llm_type,
+        self.llm = llm_utils.get_llm(llm_type=config.llms.llm_type,
                                  model_name=config.llms.llm_name,
                                  local_server=self.config.llms.local_server)
 
@@ -153,7 +153,7 @@ class DocumentRetriever:
             self.vector_store.save_local(self.data_path)  # FAISS uses save_local
 
     def initialize_vector_store(self):
-        self.vector_store = utils.get_vector_store(vector_store_type=self.config.vector_store.vector_type,
+        self.vector_store = vector_utils.get_vector_store(vector_store_type=self.config.vector_store.vector_type,
                                                    data_path=self.config.vector_store.data_path,
                                                    embedding_model=self.embedding_model,
                                                    dimension=self.config.embeddings.dimension,
