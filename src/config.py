@@ -1,5 +1,8 @@
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from pydantic import ValidationError
+
+load_dotenv()
 
 class VectorStoreConfig(BaseSettings):
     vector_type: str
@@ -24,7 +27,7 @@ class AppConfig(BaseSettings):
     embeddings: Embeddings
 
     class Config:
-        env_file = ".env"  # Specify the path to your .env file
+        env_file = "/.env"  # Specify the path to your .env file
         env_nested_delimiter = "__"  # Allow nested environment variable syntax
 
 try:

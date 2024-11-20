@@ -3,8 +3,8 @@ from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 from langchain_core.prompts import ChatPromptTemplate
 
-import utils
-from src.config import AppConfig
+from common import utils
+from config import AppConfig
 
 
 class DocumentRetriever:
