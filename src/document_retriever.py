@@ -20,6 +20,8 @@ class DocumentRetriever:
 
         ---
         Answer the query based on the above context: {query}
+        
+        Use markdown formatting on the response.
         """
         self.config = config
         self.embedding_model = utils.get_embedding_model(config.embeddings.embedding_type, config.embeddings.embedding_model)
