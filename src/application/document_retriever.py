@@ -197,14 +197,22 @@ class DocumentRetriever:
 
         :return:
         """
-        if config.vector_store.vector_type == 'chroma':
-            # self.vector_store.persist()  # Chroma uses persist
-            pass
-        elif config.vector_store.vector_type == 'faiss':
-            self.vector_store.save_local(config.vector_store.data_path)  # FAISS uses save_local
+        try:
+            if config.vector_store.vector_type == 'chroma':
+                # self.vector_store.persist()  # Chroma uses persist
+                pass
+            elif config.vector_store.vector_type == 'faiss':
+                self.vector_store.save_local(config.vector_store.data_path)  # FAISS uses save_local
+                # Load the vector after saving
+                self.vector_store.load_local(
+                    folder_path=config.vector_store.data_path,
+                    embeddings=self.embedding_model,
+                    allow_dangerous_deserialization=True)
 
-        print("Document successfully stored.")
-
+            print("Document successfully stored.")
+        except Exception as e:
+            # Catching any exceptions to print a debug message
+            print(f"An error occurred during storing documents: {e}")
 
 
     def initialize_vector_store(self):
