@@ -1,128 +1,20 @@
-import os
-from concurrent.futures import ThreadPoolExecutor
-from contextlib import asynccontextmanager
+import middleware
+from entrypoints.router.v1 import router
 
-from common import utils
-import shutil
-from fastapi import FastAPI, UploadFile, File, APIRouter, HTTPException, status
-from fastapi.responses import JSONResponse
-
-from config import config
-from application.document_retriever import DocumentRetriever
-from application.question_answer import QuestionAnswer
-from domain.model import QuestionAnswerRequest, QuestionAnswerResponse
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Ensure the directory exists
-    if not os.path.exists(config.vector_store.data_path):
-        os.makedirs(config.vector_store.data_path)
-        print(f"Created Data directory: {config.vector_store.data_path}")
-    else:
-        print(f"Using existing Data directory: {config.vector_store.data_path}")
-
-    if not os.path.exists(config.vector_store.resource_path):
-        os.makedirs(config.vector_store.resource_path)
-        print(f"Created Resource directory: {config.vector_store.resource_path}")
-    else:
-        print(f"Using existing Resource directory: {config.vector_store.resource_path}")
-
-    # set openapi key
-    os.environ["OPENAI_API_KEY"] = config.llms.api_key
-    os.environ["HUGGINGFACEHUB_API_TOKEN"] = config.llms.api_key
-
-    # Initialize the document retriever
-    document_retriever = DocumentRetriever(config=config)
-    app.state.document_retriever = document_retriever
-    # Initialize the QA Wrapper
-    app.state.question_answer = QuestionAnswer(retriever=document_retriever)
-    app.state.app_config = config
-
-    print("Application startup")
-    yield
-    print("Application shutdown")
+from fastapi import FastAPI
 
 # Create the FastAPI app
-app = FastAPI(title="RAG-Bot", version="1.0.0", base_path="/api/v1", lifespan=lifespan)
-# Create a router with a prefix
-router = APIRouter(prefix="/api/v1")
-executor = ThreadPoolExecutor()
-
-@router.post("/question-answer")
-async def question_answer(request: QuestionAnswerRequest):
-    # get similarities
-    response_similarities = app.state.question_answer.generate_similarities(request.query)
-
-    # get answer from LLM (final format)
-    response_answer = app.state.question_answer.generate_response(request.query, response_similarities)
-
-    # Extract only `source` and `page` fields
-    source = [
-        {"source": doc.metadata["source"], "page": doc.metadata["page"]}
-        for doc in response_answer["source_documents"]
-    ] if response_answer["source_documents"] is not None else None
-
-    return QuestionAnswerResponse(
-            query=request.query,
-            result=response_answer["result"],
-            source=source
-        )
-
-
-@router.get("/similarity-search")
-async  def similarity_search(query: str):
-    # get similarities
-    response_similarities = app.state.question_answer.generate_similarities_with_score_no_filter(query)
-
-    # Extract document fields and score into a dictionary
-    response_data = [
-        {
-            "document": doc.page_content,        # Assuming the content of the document
-            "metadata": doc.metadata,            # Document metadata (like source, author, etc.)
-            "score": f"{score}"                  # Similarity score
-        }
-        for (doc, score) in response_similarities
-    ]
-
-    return JSONResponse(content={"similarity_search": response_data}, status_code=status.HTTP_200_OK)
-
-
-def process_document(file_extension: str, file_path: str):
-    document = utils.extract_text_from_file(file_path=file_path) if "txt" in file_extension else utils.extract_text_from_pdf(pdf_path=file_path)
-    app.state.document_retriever.add_documents(document, True)
-
-@router.post("/add-document")
-async def add_document(file: UploadFile = File(...)):
-    file_path = f"{app.state.app_config.vector_store.resource_path}/{file.filename}"
-    file_extension = file.filename.split(".")[-1]
-
-    if "txt" in file_extension:
-        with open(file_path, "w", encoding="utf8") as buffer:
-            buffer.write(file.file.read().decode("utf-8"))
-    elif "pdf" in file_extension:
-        with open(file_path, "wb",) as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"The file extension is not valid.: {file_extension}",
-        )
-    # Schedule background processing
-    executor.submit(process_document, file_extension, file_path)
-
-    return JSONResponse(content={"message": "Documents uploaded successfully.  Document embedding ongoing and will be available in a while."},
-                        status_code=status.HTTP_202_ACCEPTED)
-
-@router.post("/initialize-vector-store")
-async def initialize_db():
-    app.state.document_retriever.initialize_vector_store()
-    return {"status": "Vector store initialized!"}
+app = FastAPI(
+    title="RAG-Bot",
+    version="1.0.0",
+    base_path="/v1")
 
 # Include the router into the FastAPI app
-app.include_router(router)
+app.include_router(router.router)
+
+# Configure middleware
+middleware.configure(app)
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
