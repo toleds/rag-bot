@@ -1,14 +1,6 @@
 from application import document_retriever
 from domain.model import QuestionAnswerRequest, QuestionAnswerResponse
-
-from fastapi import (
-    FastAPI,
-    UploadFile,
-    File,
-    APIRouter,
-    HTTPException,
-    status
-)
+from fastapi import APIRouter
 
 router = APIRouter(tags=["Question-Answer"])
 
@@ -20,10 +12,10 @@ async def question_answer(request: QuestionAnswerRequest):
     :return:
     """
     # get similarities
-    response_similarities = document_retriever.search(request.query)
+    response_similarities = await document_retriever.search(request.query)
 
     # get answer from LLM (final format)
-    response_answer = document_retriever.question_answer(request.query, response_similarities)
+    response_answer = await document_retriever.question_answer(request.query, response_similarities)
 
     # Extract only `source` and `page` fields
     source = [

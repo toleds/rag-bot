@@ -24,8 +24,6 @@ class DocumentRetriever:
         Use markdown formatting on the response.
         """
         self.embedding_model = llm_utils.get_embedding_model(config.embeddings.embedding_type, config.embeddings.embedding_model)
-        self.vector_store_type = config.vector_store.vector_type
-        self.data_path = config.vector_store.data_path
 
         # get the vector store instance
         self.vector_store = vector_utils.get_vector_store(vector_store_type=config.vector_store.vector_type,
@@ -45,7 +43,7 @@ class DocumentRetriever:
                                               verbose=True,
                                               return_source_documents=True)
 
-    def add_documents(self, documents: list[Document], store_documents: bool = False):
+    async def add_documents(self, documents: list[Document], store_documents: bool = False):
         """
         Add documents to the vector store and persist accordingly.
 
@@ -75,14 +73,14 @@ class DocumentRetriever:
             doc.metadata["id"] = f"{page_id}:{page_index}"
 
         # Add documents to the vector store
-        self.vector_store.add_documents(documents)
+        await self.vector_store.aadd_documents(documents)
 
         if store_documents:
             self.store_documents()
 
         print("Documents stored successfully.")
 
-    def search(self, query_text: str):
+    async def search(self, query_text: str):
         """
         Search the vector store.
 
@@ -90,9 +88,9 @@ class DocumentRetriever:
         :return:
         """
 
-        return self.vector_store.similarity_search(query_text, k=5)
+        return await self.vector_store.asimilarity_search(query_text, k=5)
 
-    def search_with_score(self, query_text: str, filter_score: float = 1.0):
+    async def search_with_score(self, query_text: str, filter_score: float = 1.0):
         """
         Search the vector store.
 
@@ -100,7 +98,7 @@ class DocumentRetriever:
         :param query_text:
         :return:
         """
-        results = self.vector_store.similarity_search_with_score(query_text, k=5)
+        results = await self.vector_store.asimilarity_search_with_score(query_text, k=5)
         filtered_results = [doc for doc, score in results if score < filter_score]
 
         # If the response is empty, raise 404
@@ -109,7 +107,7 @@ class DocumentRetriever:
 
         return filtered_results
 
-    def search_with_score_no_fiter(self, query_text: str):
+    async def search_with_score_no_fiter(self, query_text: str):
         """
         Search the vector store.
 
@@ -117,7 +115,7 @@ class DocumentRetriever:
         :return:
         """
 
-        results = self.vector_store.similarity_search_with_score(query_text, k=5)
+        results = await self.vector_store.asimilarity_search_with_score(query_text, k=5)
 
         # If the response is empty, raise 404
         if not results:
@@ -125,7 +123,7 @@ class DocumentRetriever:
 
         return results
 
-    def question_answer(self, query_text: str, documents: list):
+    async def question_answer(self, query_text: str, documents: list):
         """
         QA the LLM
 
@@ -137,7 +135,7 @@ class DocumentRetriever:
         prompt_template = ChatPromptTemplate.from_template(self.PROMPT_TEMPLATE)
         query = prompt_template.format(context=context, query=query_text)
 
-        return self.qa.invoke(query)
+        return await self.qa._acall({"query": query})  #invoke(query)
 
     def store_documents(self):
         """
@@ -145,11 +143,11 @@ class DocumentRetriever:
 
         :return:
         """
-        if self.vector_store_type == 'chroma':
+        if config.vector_store.vector_store_type == 'chroma':
             # self.vector_store.persist()  # Chroma uses persist
             pass
-        elif self.vector_store_type == 'faiss':
-            self.vector_store.save_local(self.data_path)  # FAISS uses save_local
+        elif config.vector_store.vector_store_type == 'faiss':
+            self.vector_store.save_local(config.vector_store.data_path)  # FAISS uses save_local
 
     def initialize_vector_store(self):
         self.vector_store = vector_utils.get_vector_store(vector_store_type=config.vector_store.vector_type,
@@ -158,3 +156,13 @@ class DocumentRetriever:
                                                    dimension=config.embeddings.dimension,
                                                    initialize=True)
 
+
+    # def _get_existing_doc_ids(self):
+    #     if config.vector_store.vector_type == 'chroma':
+    #         self.vector_store.get()
+    #         pass
+    #     elif config.vector_store.vector_type == 'faiss':
+    #         self.vector_store.get
+    #         pass
+    #     else:
+    #         raise ValueError(f"Unsupported vector store: {config.vector_store.vector_type}")
