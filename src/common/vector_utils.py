@@ -5,7 +5,7 @@ from langchain_chroma import Chroma
 from faiss import IndexFlatL2
 from langchain_community.docstore.in_memory import InMemoryDocstore
 
-def get_vector_store(vector_store_type: str, data_path, embedding_model, dimension: int, initialize: bool = False):
+def get_vector_store(vector_type: str, data_path, embedding_model, dimension: int, initialize: bool = False):
     """
     decide which vector store to use
 
@@ -17,12 +17,12 @@ def get_vector_store(vector_store_type: str, data_path, embedding_model, dimensi
     :return:
     """
     # Decide which vector store to use (Chroma or FAISS)
-    if vector_store_type == 'chroma':
+    if vector_type == 'chroma':
         return get_chroma_instance(data_path=data_path, embedding_model=embedding_model)
-    elif vector_store_type == 'faiss':
+    elif vector_type == 'faiss':
         return get_faiss_instance(data_path=data_path, embedding_model=embedding_model, initialize=initialize, dimension=dimension)
     else:
-        raise ValueError(f"Unsupported vector store: {vector_store_type}")
+        raise ValueError(f"Unsupported vector store: {vector_type}")
 
 def get_chroma_instance(data_path, embedding_model):
     """
