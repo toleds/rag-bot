@@ -4,28 +4,30 @@ from application import document_retriever
 from common import file_utils
 from config import config
 from concurrent.futures import ThreadPoolExecutor
-from fastapi.responses import JSONResponse
+
 from fastapi import (
-    FastAPI,
     UploadFile,
     File,
     APIRouter,
     HTTPException,
     status
 )
+from fastapi.responses import JSONResponse
+
+
 
 router = APIRouter(tags=["Document-Retriever"])
 executor = ThreadPoolExecutor()
 
 @router.get("/similarity-search")
-async  def similarity_search(query: str):
+async def similarity_search(query: str):
     """
 
     :param query:
     :return:
     """
     # get similarities
-    response_similarities = document_retriever.search_with_score_no_fiter(query)
+    response_similarities = await document_retriever.search_with_score_no_fiter(query)
 
     # Extract document fields and score into a dictionary
     response_data = [
@@ -39,10 +41,6 @@ async  def similarity_search(query: str):
 
     return JSONResponse(content={"similarity_search": response_data}, status_code=status.HTTP_200_OK)
 
-
-def process_document(file_extension: str, file_path: str):
-    document = file_utils.extract_text_from_file(file_path=file_path) if "txt" in file_extension else file_utils.extract_text_from_pdf(pdf_path=file_path)
-    document_retriever.add_documents(document, True)
 
 @router.post("/add-document")
 async def add_document(file: UploadFile = File(...)):
@@ -66,7 +64,7 @@ async def add_document(file: UploadFile = File(...)):
             detail=f"The file extension is not valid.: {file_extension}",
         )
     # Schedule background processing
-    executor.submit(process_document, file_extension, file_path)
+    executor.submit(_process_document, file_extension, file_path)
 
     return JSONResponse(content={"message": "Documents uploaded successfully.  Document embedding ongoing and will be available in a while."},
                         status_code=status.HTTP_202_ACCEPTED)
@@ -79,3 +77,7 @@ async def initialize_db():
     """
     document_retriever.initialize_vector_store()
     return {"status": "Vector store initialized!"}
+
+async def _process_document(file_extension: str, file_path: str):
+    document = file_utils.extract_text_from_file(file_path=file_path) if "txt" in file_extension else file_utils.extract_text_from_pdf(pdf_path=file_path)
+    await document_retriever.add_documents(document, True)
