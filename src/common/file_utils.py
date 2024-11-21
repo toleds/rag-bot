@@ -46,7 +46,7 @@ def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap
         raise FileNotFoundError(f"Text file not found: {file_path}")
 
     # Load the file
-    loader = TextLoader(file_path, encoding="utf-8")
+    loader = TextLoader(file_path)
     documents = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,

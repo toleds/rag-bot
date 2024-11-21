@@ -1,9 +1,9 @@
+import asyncio
 import shutil
 
 from application import document_retriever
 from common import file_utils
 from config import config
-from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import (
     UploadFile,
@@ -17,7 +17,6 @@ from fastapi.responses import JSONResponse
 
 
 router = APIRouter(tags=["Document-Retriever"])
-executor = ThreadPoolExecutor()
 
 @router.get("/similarity-search")
 async def similarity_search(query: str):
@@ -64,10 +63,21 @@ async def add_document(file: UploadFile = File(...)):
             detail=f"The file extension is not valid.: {file_extension}",
         )
     # Schedule background processing
-    executor.submit(_process_document, file_extension, file_path)
+    asyncio.create_task(_process_document(file_extension, file_path))
 
     return JSONResponse(content={"message": "Documents uploaded successfully.  Document embedding ongoing and will be available in a while."},
                         status_code=status.HTTP_202_ACCEPTED)
+
+async def _process_document(file_extension: str, file_path: str):
+    document = (
+        file_utils.extract_text_from_file(file_path=file_path)
+        if "txt" in file_extension
+        else file_utils.extract_text_from_pdf(pdf_path=file_path)
+    )
+
+    await document_retriever.add_documents(document, True)
+    print(f"Document {file_path} added to the queue.")
+
 
 @router.post("/initialize-vector-store")
 async def initialize_db():
@@ -77,7 +87,3 @@ async def initialize_db():
     """
     document_retriever.initialize_vector_store()
     return {"status": "Vector store initialized!"}
-
-async def _process_document(file_extension: str, file_path: str):
-    document = file_utils.extract_text_from_file(file_path=file_path) if "txt" in file_extension else file_utils.extract_text_from_pdf(pdf_path=file_path)
-    await document_retriever.add_documents(document, True)
