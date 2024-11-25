@@ -75,10 +75,10 @@ class DocumentRetriever:
 
 
     async def add_documents(self, documents: list[Document], store_documents: bool = False):
-        """ Add documents to the queue for processing. """        # Add documents to the queue
+        """ Add documents to the queue for processing. """
         self.isProcessing = True
         await self.queue.put((documents,store_documents))
-        print(f"Enqueued  {len(documents)} documents to the queue. Total documents are {self.queue.qsize()}")
+        print(f"Queued  {len(documents)} chunks to the queue. Total documents are {self.queue.qsize()}")
 
         # Start the worker
         if not self.worker_task:
@@ -94,9 +94,10 @@ class DocumentRetriever:
         # generate ids (PDF only)
         last_page_id = None
         page_index = 0
+        stripped_path = f"{config.vector_store.resource_path}/"
 
         for doc in documents:
-            source:str = doc.metadata.get("source")
+            source:str = doc.metadata.get("source").replace(stripped_path, "", 1)
 
             if source.lower().endswith(".pdf"):
                 page = doc.metadata.get("page")
@@ -110,17 +111,22 @@ class DocumentRetriever:
                 page_index = 0
 
             last_page_id = page_id
-            doc.metadata["id"] = f"{page_id}:{page_index}"
+
+            doc.metadata["source"] = source
+            doc.id = f"{page_id}:{page_index}"
+            doc.metadata["id"] = doc.id
+
 
         # Add documents to the vector store
         await self._add_documents_in_batches(self.vector_store, documents)
 
 
     async def _add_documents_in_batches(self, vector_store, documents, batch_size=100):
-        print(f"Total documents to add: {len(documents)}")
+        print(f"Total chunks to add: {len(documents)}")
         # Split the documents into batches
         num_batches = math.ceil(len(documents) / batch_size)
         print(f"Total batches to add: {num_batches}")
+        tasks = []
 
         for i in range(num_batches):
             start = i * batch_size
@@ -128,11 +134,12 @@ class DocumentRetriever:
             batch = documents[start:end]
 
             # Add the batch of documents asynchronously
-            print(f"Queueing batch {i + 1}/{num_batches} with {len(batch)} documents.")
-            await vector_store.aadd_documents(batch)
+            print(f"Adding batch {i + 1}/{num_batches} with {len(batch)} chunks.")
+            tasks.append(vector_store.aadd_documents(batch))
+            # await vector_store.aadd_documents(batch)
 
-        # No need to await the batches here - it's done asynchronously.
-        print("Document batches enqueued for processing.")
+        await asyncio.gather(*tasks)
+        print("Document batches added for processing.")
 
     async def search(self, query_text: str):
         """
@@ -185,10 +192,12 @@ class DocumentRetriever:
         :param query_text:
         :return:
         """
+
+        print("Formatting request context...")
         context = utils.format_context(documents)
         prompt_template = ChatPromptTemplate.from_template(self.PROMPT_TEMPLATE)
         query = prompt_template.format(context=context, query=query_text)
-
+        print("Sending to LLM to answer...")
         return await self.qa._acall({"query": query})  #invoke(query)
 
     def store_documents(self):
@@ -223,12 +232,16 @@ class DocumentRetriever:
                                                    initialize=True)
 
 
-    # def _get_existing_doc_ids(self):
-    #     if config.vector_store.vector_type == 'chroma':
-    #         self.vector_store.get()
-    #         pass
-    #     elif config.vector_store.vector_type == 'faiss':
-    #         self.vector_store.get
-    #         pass
-    #     else:
-    #         raise ValueError(f"Unsupported vector store: {config.vector_store.vector_type}")
+    # def filter_unique_documents(self, documents):
+    #     ids = self.vector_store.get(where={"source":documents[0].metadata["source"]}, include=[])
+    #     print(f"Doc Ids : {ids}")
+    #     for doc in documents:
+    #         print(f"Check Id: {doc.id}")
+    #         if doc.metadata["id"] in ids:
+    #             print(f"Duplicate Id: {doc.id}")
+    #         else:
+    #             print(f"Unique id: {doc.id}")
+
+
+
+

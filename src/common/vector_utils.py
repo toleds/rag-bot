@@ -5,13 +5,14 @@ from langchain_chroma import Chroma
 from faiss import IndexFlatL2
 from langchain_community.docstore.in_memory import InMemoryDocstore
 
+
 def get_vector_store(vector_type: str, data_path, embedding_model, dimension: int, initialize: bool = False):
     """
     decide which vector store to use
 
     :param dimension:
     :param initialize:
-    :param vector_store_type:
+    :param vector_type:
     :param data_path:
     :param embedding_model:
     :return:
@@ -24,6 +25,7 @@ def get_vector_store(vector_type: str, data_path, embedding_model, dimension: in
     else:
         raise ValueError(f"Unsupported vector store: {vector_type}")
 
+
 def get_chroma_instance(data_path, embedding_model):
     """
     Initialize Chroma vector store.
@@ -33,6 +35,7 @@ def get_chroma_instance(data_path, embedding_model):
     :return:
     """
     return Chroma(persist_directory=data_path, embedding_function=embedding_model)
+
 
 def _init_faiss_instance(embedding_model, dimension: int):
     """
@@ -50,6 +53,7 @@ def _init_faiss_instance(embedding_model, dimension: int):
         index=index,
         docstore=InMemoryDocstore(),
         index_to_docstore_id={})
+
 
 def get_faiss_instance(data_path, embedding_model, initialize, dimension: int):
     """
@@ -79,3 +83,5 @@ def get_faiss_instance(data_path, embedding_model, initialize, dimension: int):
         print("Loaded existing FAISS vector store.")
 
     return vector_store
+
+
