@@ -49,7 +49,7 @@ class DocumentRetriever:
         # Set up the RetrievalQA chain
         self.qa = RetrievalQA.from_chain_type(llm=self.llm,
                                               chain_type="stuff",
-                                              retriever=self.vector_store.as_retriever(),
+                                              retriever=self.vector_store.as_retriever(search_kwargs={"k": 5}),
                                               verbose=True,
                                               return_source_documents=True)
 
@@ -187,13 +187,12 @@ class DocumentRetriever:
         if not results:
             raise HTTPException(status_code=404, detail="No similar documents found.  Kindly refine your query.")
 
-        return results
+        return results, self.vector_store._collection_name
 
-    async def question_answer(self, query_text: str, documents: list):
+    async def question_answer(self, query_text: str, documents):
         """
         QA the LLM
 
-        :param documents:
         :param query_text:
         :return:
         """
@@ -203,7 +202,8 @@ class DocumentRetriever:
         prompt_template = ChatPromptTemplate.from_template(self.PROMPT_TEMPLATE)
         query = prompt_template.format(query=query_text, context=context)
         print("Sending to LLM to answer...")
-        return await self.qa._acall({"query": query})  #invoke(query)
+
+        return self.qa.invoke(query), self.vector_store._collection_name
 
     def store_documents(self):
         """
@@ -236,6 +236,14 @@ class DocumentRetriever:
                                                         dimension=config.embeddings.dimension,
                                                         collection_name=collection_name)
         print(f"Items in {self.vector_store._collection_name} are {self.vector_store._collection.count()}")
+
+        self.qa = RetrievalQA.from_chain_type(
+            llm=self.llm,
+            chain_type="stuff",
+            retriever=self.vector_store.as_retriever(search_kwargs={"k": 5}),
+            verbose=True,
+            return_source_documents=True
+        )
 
         return  self.vector_store._collection_name
 

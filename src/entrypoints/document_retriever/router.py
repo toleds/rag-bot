@@ -29,7 +29,7 @@ async def similarity_search(query: str):
     :return:
     """
     # get similarities
-    response_similarities = await document_retriever.search_with_score_no_fiter(query)
+    response_similarities, collection = await document_retriever.search_with_score_no_fiter(query)
 
     # Extract document fields and score into a dictionary
     response_data = [
@@ -41,7 +41,7 @@ async def similarity_search(query: str):
         for (doc, score) in response_similarities
     ]
 
-    return JSONResponse(content={"similarity_search": response_data}, status_code=status.HTTP_200_OK)
+    return JSONResponse(content={"collection": collection,"similarity_search": response_data}, status_code=status.HTTP_200_OK)
 
 
 @router.post("/add-document")
@@ -86,7 +86,7 @@ async def _process_document(file_extension: str, file_path: str):
 @router.post("/switch-collection")
 async def create_collection(collection_name: str):
     collection = document_retriever.get_or_create_collection(collection_name=collection_name)
-    return {"collection_name": collection}
+    return {"collection": collection}
 
 @router.get("/list-collection")
 async def list_collection():
