@@ -19,7 +19,7 @@ async def question_answer(request: QuestionAnswerRequest):
 
     # Extract only `source` and `page` fields
     source = [
-        {"source": doc.metadata["source"], "page": doc.metadata["page"]}
+        {"source": doc.metadata.get("source", None), "page": doc.metadata.get("page", None)}
         for doc in response_answer["source_documents"]
     ] if response_answer["source_documents"] is not None else None
 
