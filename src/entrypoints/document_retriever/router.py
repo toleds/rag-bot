@@ -1,5 +1,8 @@
 import asyncio
+import json
 import shutil
+
+from fastapi.background import BackgroundTasks
 
 from application import document_retriever
 from common import file_utils
@@ -42,9 +45,10 @@ async def similarity_search(query: str):
 
 
 @router.post("/add-document")
-async def add_document(file: UploadFile = File(...)):
+async def add_document(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     """
 
+    :param background_tasks:
     :param file:
     :return:
     """
@@ -63,7 +67,7 @@ async def add_document(file: UploadFile = File(...)):
             detail=f"The file extension is not valid.: {file_extension}",
         )
     # Schedule background processing
-    asyncio.create_task(_process_document(file_extension, file_path))
+    background_tasks.add_task(_process_document,file_extension, file_path)
 
     return JSONResponse(content={"message": "Documents uploaded successfully.  Document embedding ongoing and will be available in a while."},
                         status_code=status.HTTP_202_ACCEPTED)
@@ -78,6 +82,17 @@ async def _process_document(file_extension: str, file_path: str):
     await document_retriever.add_documents(document, True)
     print(f"Document {file_path} added to the queue.")
 
+
+@router.post("/switch-collection")
+async def create_collection(collection_name: str):
+    collection = document_retriever.get_or_create_collection(collection_name=collection_name)
+    return {"collection_name": collection}
+
+@router.get("/list-collection")
+async def list_collection():
+    collections = document_retriever.get_collection_list()
+    collection_dict = [{"collection_name": collection.name} for collection in collections]
+    return json.dumps(collection_dict, indent=4)
 
 @router.post("/initialize-vector-store")
 async def initialize_db():

@@ -38,6 +38,9 @@ class DocumentRetriever:
                                                    dimension=config.embeddings.dimension,
                                                    embedding_model=self.embedding_model)
 
+        # get te collection (default is "default")
+        print(f"Current collection in use {self.vector_store._collection_name}")
+
         # Initialize the language model (OpenAI for QA)
         self.llm = llm_utils.get_llm(llm_type=config.llms.llm_type,
                                  model_name=config.llms.llm_name,
@@ -116,12 +119,11 @@ class DocumentRetriever:
             doc.id = f"{page_id}:{page_index}"
             doc.metadata["id"] = doc.id
 
-
         # Add documents to the vector store
-        await self._add_documents_in_batches(self.vector_store, documents)
+        await self._add_documents_in_batches(documents)
 
 
-    async def _add_documents_in_batches(self, vector_store, documents, batch_size=100):
+    async def _add_documents_in_batches(self, documents, batch_size=1000):
         print(f"Total chunks to add: {len(documents)}")
         # Split the documents into batches
         num_batches = math.ceil(len(documents) / batch_size)
@@ -133,13 +135,16 @@ class DocumentRetriever:
             end = start + batch_size
             batch = documents[start:end]
 
-            # Add the batch of documents asynchronously
-            print(f"Adding batch {i + 1}/{num_batches} with {len(batch)} chunks.")
-            tasks.append(vector_store.aadd_documents(batch))
-            # await vector_store.aadd_documents(batch)
+            try:
+                # Add the batch of documents asynchronously
+                print(f"Adding batch {i + 1}/{num_batches} with {len(batch)} chunks on collection {self.vector_store._collection_name}.")
+                tasks.append(self.vector_store.aadd_documents(batch))
+                print(f"Batch {i + 1}/{num_batches} with {len(batch)} chunks added.")
+            except Exception as e:
+                print(f"Exception: {e}")
 
         await asyncio.gather(*tasks)
-        print("Document batches added for processing.")
+        print("Document batches added.")
 
     async def search(self, query_text: str):
         """
@@ -196,7 +201,7 @@ class DocumentRetriever:
         print("Formatting request context...")
         context = utils.format_context(documents)
         prompt_template = ChatPromptTemplate.from_template(self.PROMPT_TEMPLATE)
-        query = prompt_template.format(context=context, query=query_text)
+        query = prompt_template.format(query=query_text, context=context)
         print("Sending to LLM to answer...")
         return await self.qa._acall({"query": query})  #invoke(query)
 
@@ -224,12 +229,26 @@ class DocumentRetriever:
             print(f"An error occurred during storing documents: {e}")
 
 
+    def get_or_create_collection(self, collection_name: str = "default"):
+        self.vector_store = vector_utils.get_vector_store(vector_type=config.vector_store.vector_type,
+                                                        data_path=config.vector_store.data_path,
+                                                        embedding_model=self.embedding_model,
+                                                        dimension=config.embeddings.dimension,
+                                                        collection_name=collection_name)
+        print(f"Items in {self.vector_store._collection_name} are {self.vector_store._collection.count()}")
+
+        return  self.vector_store._collection_name
+
+    def get_collection_list(self):
+        return self.vector_store._client.list_collections()
+
+
     def initialize_vector_store(self):
+        self.vector_store.reset_collection()
         self.vector_store = vector_utils.get_vector_store(vector_type=config.vector_store.vector_type,
                                                    data_path=config.vector_store.data_path,
                                                    embedding_model=self.embedding_model,
-                                                   dimension=config.embeddings.dimension,
-                                                   initialize=True)
+                                                   dimension=config.embeddings.dimension)
 
 
     # def filter_unique_documents(self, documents):

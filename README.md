@@ -53,11 +53,10 @@ dot product, or Euclidean distance.
 
 the application currently supports **Chroma** and **FAISS** vector store.
 
-```yaml
-vector_store:
-  vector_type: "faiss"  # Options: "chroma", "faiss"
-  data_path: "./db"
-  resource_path: "./resource"
+```dotenv
+VECTOR_STORE__VECTOR_TYPE=faiss  # Options: "chroma", "faiss"
+VECTOR_STORE__DATA_PATH=./db
+VECTOR_STORE__RESOURCE_PATH=./docs
 ```
 # Embeddings
 
@@ -69,11 +68,10 @@ For example:
 - These embeddings are generated using pre-trained models (like those from HuggingFace, OpenAI, or Ollama) and are essential for tasks like 
   semantic search, recommendation systems, and question-answering.
 
-```yaml
-embeddings:
-  embedding_type: "huggingface" # huggingface=HuggingFaceEmbeddings, openai=OpenAIEmbeddings, etc
-  embedding_model: "sentence-transformers/all-mpnet-base-v2"
-  dimension: 768 # check the embedding model dimension (not for chroma)
+```dotenv
+EMBEDDINGS__EMBEDDING_MODEL=sentence-transformers/all-mpnet-base-v2
+EMBEDDINGS__EMBEDDING_TYPE=huggingface # huggingface=HuggingFaceEmbeddings, openai=OpenAIEmbeddings, etc
+EMBEDDINGS__DIMENSION=768 # check the embedding model dimension (not for chroma)
 ```
 
 ## Reference
@@ -91,13 +89,12 @@ It can process, interpret, and generate text based on the context it has learned
 wide range of tasks, such as answering questions, summarizing text, translating languages, and even creating content. They work by predicting the next word 
 in a sequence based on the patterns they’ve learned during training, making them powerful tools for natural language understanding and generation.
 
-```yaml
-llms:
-  llm_type: "ollama" # openai, huggingface, ollama (local llm server)
-  temperature: 1.5
-  model_name: "mistral" # LLM Model
-  api_key: "<openai or huggingface key>"
-  local_server: "http://localhost:11434" # for ollama local server only
+```dotenv
+LLMS__LLM_TYPE=ollama # openai, huggingface, ollama (local llm server)
+LLMS__TEMPERATURE=1.5
+LLMS__LLM_NAME=mistral # this is ollama model
+LLMS__API_KEY=api-key # openai or huggingface
+LLMS__LOCAL_SERVER=http://localhost:11434 # for ollama local server only
 ```
 ## Recommended LLM
 
