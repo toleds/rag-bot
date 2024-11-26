@@ -6,7 +6,7 @@ from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_core.documents import Document
 
 
-def extract_text_from_pdf(pdf_path: str, chunk_size: int = 100, chunk_overlap: int = 20) -> List[Document]:
+def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> List[Document]:
     """
     Extracts text from a PDF file, splits the text from each page into chunks, and returns a list of text chunks.
 
@@ -33,7 +33,7 @@ def extract_text_from_pdf(pdf_path: str, chunk_size: int = 100, chunk_overlap: i
 
     return text_chunks
 
-def extract_text_from_file(file_path: str, chunk_size: int = 100, chunk_overlap: int = 20) -> List[Document]:
+def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> List[Document]:
     """
     Extracts text from a plain text file, splits it into chunks, and returns a list of text chunks.
 

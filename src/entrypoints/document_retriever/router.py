@@ -1,4 +1,3 @@
-import asyncio
 import json
 import shutil
 
@@ -29,7 +28,28 @@ async def similarity_search(query: str):
     :return:
     """
     # get similarities
-    response_similarities, collection = await document_retriever.search_with_score_no_fiter(query)
+    response_similarities, collection = await document_retriever.search(query)
+
+    # Extract document fields and score into a dictionary
+    response_data = [
+        {
+            "document": doc.page_content,        # Assuming the content of the document
+            "metadata": doc.metadata,            # Document metadata (like source, author, etc.)
+        }
+        for (doc) in response_similarities
+    ]
+
+    return JSONResponse(content={"collection": collection,"similarity_search": response_data}, status_code=status.HTTP_200_OK)
+
+@router.get("/similarity-search-with-score")
+async def similarity_search_with_score(query: str):
+    """
+
+    :param query:
+    :return:
+    """
+    # get similarities
+    response_similarities = await document_retriever.search_with_score_no_fiter(query)
 
     # Extract document fields and score into a dictionary
     response_data = [
@@ -41,7 +61,7 @@ async def similarity_search(query: str):
         for (doc, score) in response_similarities
     ]
 
-    return JSONResponse(content={"collection": collection,"similarity_search": response_data}, status_code=status.HTTP_200_OK)
+    return JSONResponse(content={"similarity_search": response_data}, status_code=status.HTTP_200_OK)
 
 
 @router.post("/add-document")

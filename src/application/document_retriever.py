@@ -1,14 +1,13 @@
 import asyncio
 import math
 
-from common import utils, vector_utils, llm_utils
+from common import vector_utils, llm_utils
 from config import config
 
 from fastapi import HTTPException
 
 from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
-from langchain_core.prompts import ChatPromptTemplate
 
 class DocumentRetriever:
     def __init__(self):
@@ -17,41 +16,18 @@ class DocumentRetriever:
         : param config: the configuration setup.
         """
 
-        self.PROMPT_TEMPLATE = """
-        Answer the query based only on the following context:
-        {context}
-
-        ---
-        Answer the query based on the above context: {query}
-        
-        Use markdown formatting on the response.
-        """
+        self.qa = None
+        self.llm = None
+        self.vector_store_retriever = None
+        self.vector_store = None
         self.queue = asyncio.Queue()  # Queue to hold documents
         self.worker_task = None
         self.isProcessing = False
 
         self.embedding_model = llm_utils.get_embedding_model(config.embeddings.embedding_type, config.embeddings.embedding_model)
 
-        # get the vector store instance
-        self.vector_store = vector_utils.get_vector_store(vector_type=config.vector_store.vector_type,
-                                                   data_path=config.vector_store.data_path,
-                                                   dimension=config.embeddings.dimension,
-                                                   embedding_model=self.embedding_model)
-
-        # get te collection (default is "default")
-        print(f"Current collection in use {self.vector_store._collection_name}")
-
-        # Initialize the language model (OpenAI for QA)
-        self.llm = llm_utils.get_llm(llm_type=config.llms.llm_type,
-                                 model_name=config.llms.llm_name,
-                                 local_server=config.llms.local_server)
-
-        # Set up the RetrievalQA chain
-        self.qa = RetrievalQA.from_chain_type(llm=self.llm,
-                                              chain_type="stuff",
-                                              retriever=self.vector_store.as_retriever(search_kwargs={"k": 5}),
-                                              verbose=True,
-                                              return_source_documents=True)
+        # setup vector_store, retriever, llm
+        self.get_or_create_collection()
 
     async def _worker(self):
         """ Worker task that processes batches of documents from the queue. """
@@ -138,7 +114,7 @@ class DocumentRetriever:
             try:
                 # Add the batch of documents asynchronously
                 print(f"Adding batch {i + 1}/{num_batches} with {len(batch)} chunks on collection {self.vector_store._collection_name}.")
-                tasks.append(self.vector_store.aadd_documents(batch))
+                tasks.append(self.vector_store_retriever.aadd_documents(batch))
                 print(f"Batch {i + 1}/{num_batches} with {len(batch)} chunks added.")
             except Exception as e:
                 print(f"Exception: {e}")
@@ -154,7 +130,15 @@ class DocumentRetriever:
         :return:
         """
 
-        return await self.vector_store.asimilarity_search(query_text, k=5)
+        results = await self.vector_store_retriever.ainvoke(query_text)
+
+        if not results:
+            raise HTTPException(status_code=404, detail="No similar documents found.  Kindly refine your query.")
+
+        print(f"Results from aget_relevant_documents: {results}")
+        print(f"Search Type : {self.vector_store_retriever.search_type} of {self.vector_store_retriever.allowed_search_types}")
+
+        return results, self.vector_store._collection_name
 
     async def search_with_score(self, query_text: str, filter_score: float = 1.0):
         """
@@ -181,29 +165,25 @@ class DocumentRetriever:
         :return:
         """
 
-        results = await self.vector_store.asimilarity_search_with_score(query_text, k=5)
+        results = await self.vector_store.asimilarity_search_with_score(query_text)
 
         # If the response is empty, raise 404
         if not results:
             raise HTTPException(status_code=404, detail="No similar documents found.  Kindly refine your query.")
 
-        return results, self.vector_store._collection_name
+        return results
 
     async def question_answer(self, query_text: str, documents):
         """
         QA the LLM
 
+        :param documents:
         :param query_text:
         :return:
         """
 
-        print("Formatting request context...")
-        context = utils.format_context(documents)
-        prompt_template = ChatPromptTemplate.from_template(self.PROMPT_TEMPLATE)
-        query = prompt_template.format(query=query_text, context=context)
         print("Sending to LLM to answer...")
-
-        return self.qa.invoke(query), self.vector_store._collection_name
+        return await self.qa._acall({"query": query_text}), self.vector_store._collection_name
 
     def store_documents(self):
         """
@@ -230,20 +210,29 @@ class DocumentRetriever:
 
 
     def get_or_create_collection(self, collection_name: str = "default"):
+        # get the vector store instance
         self.vector_store = vector_utils.get_vector_store(vector_type=config.vector_store.vector_type,
-                                                        data_path=config.vector_store.data_path,
-                                                        embedding_model=self.embedding_model,
-                                                        dimension=config.embeddings.dimension,
-                                                        collection_name=collection_name)
-        print(f"Items in {self.vector_store._collection_name} are {self.vector_store._collection.count()}")
+                                                          data_path=config.vector_store.data_path,
+                                                          dimension=config.embeddings.dimension,
+                                                          embedding_model=self.embedding_model,
+                                                          collection_name=collection_name)
 
-        self.qa = RetrievalQA.from_chain_type(
-            llm=self.llm,
-            chain_type="stuff",
-            retriever=self.vector_store.as_retriever(search_kwargs={"k": 5}),
-            verbose=True,
-            return_source_documents=True
-        )
+        self.vector_store_retriever = self.vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+
+        # get te collection (default is "default")
+        print(f"Current collection in use {self.vector_store._collection_name}")
+
+        # Initialize the language model (OpenAI for QA)
+        self.llm = llm_utils.get_llm(llm_type=config.llms.llm_type,
+                                     model_name=config.llms.llm_name,
+                                     local_server=config.llms.local_server)
+
+        # Set up the RetrievalQA chain
+        self.qa = RetrievalQA.from_chain_type(llm=self.llm,
+                                              chain_type="stuff",
+                                              retriever=self.vector_store_retriever,
+                                              verbose=True,
+                                              return_source_documents=True)
 
         return  self.vector_store._collection_name
 
