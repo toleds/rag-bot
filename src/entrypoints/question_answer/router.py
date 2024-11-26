@@ -1,5 +1,3 @@
-from networkx.algorithms.bipartite import collaboration_weighted_projected_graph
-
 from application import document_retriever
 from domain.model import QuestionAnswerRequest, QuestionAnswerResponse
 from fastapi import APIRouter
@@ -13,11 +11,8 @@ async def question_answer(request: QuestionAnswerRequest):
     :param request:
     :return:
     """
-    # get similarities
-    response_similarities = await document_retriever.search(request.query)
-
     # get answer from LLM (final format)
-    response_answer, collection = await document_retriever.question_answer(request.query, response_similarities)
+    response_answer, collection = await document_retriever.question_answer(request.query)
 
     # Extract only `source` and `page` fields
     source = [

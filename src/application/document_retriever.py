@@ -173,11 +173,10 @@ class DocumentRetriever:
 
         return results
 
-    async def question_answer(self, query_text: str, documents):
+    async def question_answer(self, query_text: str):
         """
         QA the LLM
 
-        :param documents:
         :param query_text:
         :return:
         """
