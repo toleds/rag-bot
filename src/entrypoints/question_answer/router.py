@@ -1,3 +1,5 @@
+import re
+
 from application import document_retriever
 from domain.model import QuestionAnswerRequest, QuestionAnswerResponse
 from fastapi import APIRouter
@@ -26,3 +28,17 @@ async def question_answer(request: QuestionAnswerRequest):
         result=response_answer["result"],
         source=source
     )
+
+@router.post("/question")
+async def question(request: QuestionAnswerRequest):
+    """
+
+    :param request:
+    :return:
+    """
+    # get answer from LLM (final format)
+    response_answer, collection = await document_retriever.question_answer(request.query)
+    formatted_response = re.sub(r'\\n', '\n', response_answer["result"])
+
+    return formatted_response
+
