@@ -1,5 +1,5 @@
 
-def format_context(documents, truncate: bool = False):
+def format_context(documents, truncate: bool = True):
     """
     reformat document to String
 
@@ -11,7 +11,7 @@ def format_context(documents, truncate: bool = False):
     context = "\n\n---\n\n ".join([doc.page_content for doc in documents])
 
     # Truncate the context if it exceeds max_length
-    if len(context) > 1000 and truncate:
-        context = context[:1000]
+    if len(context) > 500 and truncate:
+        context = context[:500]
 
     return context
