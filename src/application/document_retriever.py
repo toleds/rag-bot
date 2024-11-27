@@ -1,6 +1,8 @@
 import asyncio
 import math
 
+from langchain_core.prompts import PromptTemplate
+
 from common import vector_utils, llm_utils
 from config import config
 
@@ -28,6 +30,8 @@ class DocumentRetriever:
 
         # setup vector_store, retriever, llm
         self.get_or_create_collection()
+
+
 
     async def _worker(self):
         """ Worker task that processes batches of documents from the queue. """
@@ -148,7 +152,7 @@ class DocumentRetriever:
         :param query_text:
         :return:
         """
-        results = await self.vector_store.asimilarity_search_with_score(query_text, k=5)
+        results = await self.vector_store.asimilarity_search_with_score(query_text, k=10)
         filtered_results = [doc for doc, score in results if score < filter_score]
 
         # If the response is empty, raise 404
@@ -180,7 +184,6 @@ class DocumentRetriever:
         :param query_text:
         :return:
         """
-
         print("Sending to LLM to answer...")
         return await self.qa._acall({"query": query_text}), self.vector_store._collection_name
 
@@ -216,7 +219,7 @@ class DocumentRetriever:
                                                           embedding_model=self.embedding_model,
                                                           collection_name=collection_name)
 
-        self.vector_store_retriever = self.vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+        self.vector_store_retriever = self.vector_store.as_retriever(search_type="mmr", search_kwargs={"k":10})
 
         # get te collection (default is "default")
         print(f"Current collection in use {self.vector_store._collection_name}")
@@ -227,11 +230,23 @@ class DocumentRetriever:
                                      local_server=config.llms.local_server)
 
         # Set up the RetrievalQA chain
+        template =  """
+        Use ONLY the following pieces of context below to answer the question and DO NOT add any information outside of it.  
+        If context information provided is missing, just say you don't know, don't make up an answer. Always say "thanks for asking!" at the end of the answer. 
+        
+        Context: {context}
+        
+        Question: {question}
+        
+        Helpful Answer:
+        """
+        prompt_template = PromptTemplate.from_template(template)
         self.qa = RetrievalQA.from_chain_type(llm=self.llm,
                                               chain_type="stuff",
                                               retriever=self.vector_store_retriever,
                                               verbose=True,
-                                              return_source_documents=True)
+                                              return_source_documents=True,
+                                              chain_type_kwargs={"prompt": prompt_template})
 
         return  self.vector_store._collection_name
 
