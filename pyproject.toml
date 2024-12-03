@@ -1,0 +1,60 @@
+[tool.poetry]
+name = "ragbot"
+version = "0.1.0"
+description = "genai example"
+authors = ["michael.toledo <michael.toledo@synpulse.com>"]
+readme = "README.md"
+
+packages = [
+    {"include"="application", from="src"},
+    {"include"="common", from="src"},
+    {"include"="domain", from="src"},
+    {"include"="entrypoints", from="src"},
+    {"include"="*.py", from="src"},
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pydantic-settings = "^2.6.1"
+pydantic = "^2.10.2"
+python-dotenv = "^1.0.1"
+fastapi = "^0.115.5"
+starlette = "^0.41.3"
+langchain = "^0.3.9"
+langchain-community = "^0.3.9"
+langchain-core = "^0.3.21"
+langchain-huggingface = "^0.1.2"
+langchain-openapi = "^0.1.1"
+langchain-chroma = "^0.1.4"
+
+
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.15.0"
+black = "^23.3.0"
+
+[tool.pylint]
+disable = [
+    "C0114", # Missing module docstring
+    "C0116", # Missing function or method docstring
+]
+max-line-length = 88
+good-names = ["i", "j", "k", "e", "id", "df"]
+persistent = true
+reports = false
+
+[tool.black]
+line-length = 88
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.pytest_cache
+  | build
+  | dist
+)/
+'''
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
