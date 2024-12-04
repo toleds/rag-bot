@@ -1,0 +1,13 @@
+default_stages: [pre-commit]
+default_install_hook_types: [pre-commit]
+repos:
+  - repo: https://github.com/charliermarsh/ruff
+    rev: v0.5.7  # Replace with the latest version
+    hooks:
+      - id: ruff
+
+  - repo: https://github.com/psf/black
+    rev: 24.8.0  # Replace with the latest version
+    hooks:
+      - id: black
+        args: ["--check"]
