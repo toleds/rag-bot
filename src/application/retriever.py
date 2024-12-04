@@ -1,15 +1,11 @@
-import asyncio
 import math
-
-from langchain_core.prompts import PromptTemplate
+import asyncio
 
 from common import vector_utils, llm_utils
 from config import config
-
 from fastapi import HTTPException
-
 from langchain_core.documents import Document
-from langchain.chains import RetrievalQA
+from domain.model import State
 
 
 class DocumentRetriever:
@@ -19,13 +15,11 @@ class DocumentRetriever:
         : param config: the configuration setup.
         """
 
-        self.qa = None
-        self.llm = None
         self.vector_store_retriever = None
         self.vector_store = None
+
         self.worker_task = None
         self.isProcessing = False
-
         self.queue = asyncio.Queue()  # Queue to hold documents
 
         self.embedding_model = llm_utils.get_embedding_model(
@@ -127,108 +121,22 @@ class DocumentRetriever:
         await asyncio.gather(*tasks)
         print("Document batches added.")
 
-    async def search(self, query_text: str):
+    async def retrieve(self, state: State):
         """
         Search the vector store.
 
-        :param query_text:
         :return:
         """
 
-        results = await self.vector_store_retriever.ainvoke(query_text)
+        documents = await self.vector_store_retriever.ainvoke(state["question"])
 
-        if not results:
+        if not documents:
             raise HTTPException(
                 status_code=404,
                 detail="No similar documents found.  Kindly refine your query.",
             )
 
-        print(f"Results from aget_relevant_documents: {results}")
-        print(
-            f"Search Type : {self.vector_store_retriever.search_type} of {self.vector_store_retriever.allowed_search_types}"
-        )
-
-        return results, self.vector_store._collection_name
-
-    async def search_with_score(self, query_text: str, filter_score: float = 1.0):
-        """
-        Search the vector store.
-
-        :param filter_score:
-        :param query_text:
-        :return:
-        """
-        results = await self.vector_store.asimilarity_search_with_score(
-            query_text, k=10
-        )
-        filtered_results = [doc for doc, score in results if score < filter_score]
-
-        # If the response is empty, raise 404
-        if not filtered_results:
-            raise HTTPException(
-                status_code=404,
-                detail="No similar documents found.  Kindly refine your query.",
-            )
-
-        return filtered_results
-
-    async def search_with_score_no_fiter(self, query_text: str):
-        """
-        Search the vector store.
-
-        :param query_text:
-        :return:
-        """
-
-        results = await self.vector_store.asimilarity_search_with_score(query_text)
-
-        # If the response is empty, raise 404
-        if not results:
-            raise HTTPException(
-                status_code=404,
-                detail="No similar documents found.  Kindly refine your query.",
-            )
-
-        return results
-
-    async def question_answer(self, query_text: str):
-        """
-        QA the LLM
-
-        :param query_text:
-        :return:
-        """
-        print("Sending to LLM to answer...")
-        return (
-            await self.qa._acall({"query": query_text}),
-            self.vector_store._collection_name,
-        )
-
-    def store_documents(self):
-        """
-        Persist based on vector store type
-
-        :return:
-        """
-        try:
-            if config.vector_store.vector_type == "chroma":
-                # self.vector_store.persist()  # Chroma uses persist
-                pass
-            elif config.vector_store.vector_type == "faiss":
-                self.vector_store.save_local(
-                    config.vector_store.data_path
-                )  # FAISS uses save_local
-                # Load the vector after saving
-                self.vector_store.load_local(
-                    folder_path=config.vector_store.data_path,
-                    embeddings=self.embedding_model,
-                    allow_dangerous_deserialization=True,
-                )
-
-            print("Document successfully stored.")
-        except Exception as e:
-            # Catching any exceptions to print a debug message
-            print(f"An error occurred during storing documents: {e}")
+        return {"documents": documents}
 
     def get_or_create_collection(self, collection_name: str = "default"):
         # get the vector store instance
@@ -244,34 +152,6 @@ class DocumentRetriever:
 
         # get te collection (default is "default")
         print(f"Current collection in use {self.vector_store._collection_name}")
-
-        # Initialize the language model (OpenAI for QA)
-        self.llm = llm_utils.get_llm(
-            llm_type=config.llms.llm_type,
-            model_name=config.llms.llm_name,
-            local_server=config.llms.local_server,
-        )
-
-        # Set up the RetrievalQA chain
-        template = """
-        Use ONLY the following pieces of context below to answer the question and DO NOT add any information outside of it.  
-        If context information provided is missing, just say you don't know, don't make up an answer. Always say "thanks for asking!" at the end of the answer. 
-        
-        Context: {context}
-        
-        Question: {question}
-        
-        Helpful Answer:
-        """
-        prompt_template = PromptTemplate.from_template(template)
-        self.qa = RetrievalQA.from_chain_type(
-            llm=self.llm,
-            chain_type="stuff",
-            retriever=self.vector_store_retriever,
-            verbose=True,
-            return_source_documents=True,
-            chain_type_kwargs={"prompt": prompt_template},
-        )
 
         return self.vector_store._collection_name
 
