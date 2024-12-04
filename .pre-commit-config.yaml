@@ -1,7 +1,7 @@
 default_stages: [pre-commit]
 default_install_hook_types: [pre-commit]
 repos:
-  - repo: https://github.com/charliermarsh/ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.5.7  # Replace with the latest version
     hooks:
       - id: ruff
