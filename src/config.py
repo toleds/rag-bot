@@ -8,7 +8,6 @@ load_dotenv()
 
 
 class VectorStoreConfig(BaseSettings):
-    vector_type: str
     data_path: str
     resource_path: str
 
@@ -24,7 +23,6 @@ class LlmConfig(BaseSettings):
 class Embeddings(BaseSettings):
     embedding_model: str
     embedding_type: str
-    dimension: int
 
 
 class AppConfig(BaseSettings):
