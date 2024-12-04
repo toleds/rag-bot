@@ -29,6 +29,7 @@ langchain-chroma = "0.1.4"
 langchain-openai = "0.2.11"
 uvicorn = "0.32.1"
 python-multipart = "^0.0.19"
+langgraph = "^0.2.54"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.0.1"
