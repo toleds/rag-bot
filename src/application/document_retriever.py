@@ -23,9 +23,10 @@ class DocumentRetriever:
         self.llm = None
         self.vector_store_retriever = None
         self.vector_store = None
-        self.queue = asyncio.Queue()  # Queue to hold documents
         self.worker_task = None
         self.isProcessing = False
+
+        self.queue = asyncio.Queue()  # Queue to hold documents
 
         self.embedding_model = llm_utils.get_embedding_model(
             config.embeddings.embedding_type, config.embeddings.embedding_model
@@ -42,11 +43,8 @@ class DocumentRetriever:
             if task is None:
                 self.isProcessing = False
 
-            documents, store_documents = task  # Unpack the tuple
+            documents = task  # Unpack the tuple
             await self._process_document(documents)
-
-            if store_documents:
-                self.store_documents()
 
             self.queue.task_done()
 
@@ -57,12 +55,10 @@ class DocumentRetriever:
 
         return self.worker_task
 
-    async def add_documents(
-        self, documents: list[Document], store_documents: bool = False
-    ):
+    async def add_documents(self, documents: list[Document]):
         """Add documents to the queue for processing."""
         self.isProcessing = True
-        await self.queue.put((documents, store_documents))
+        await self.queue.put(documents)
         print(
             f"Queued  {len(documents)} chunks to the queue. Total documents are {self.queue.qsize()}"
         )
@@ -237,9 +233,7 @@ class DocumentRetriever:
     def get_or_create_collection(self, collection_name: str = "default"):
         # get the vector store instance
         self.vector_store = vector_utils.get_vector_store(
-            vector_type=config.vector_store.vector_type,
             data_path=config.vector_store.data_path,
-            dimension=config.embeddings.dimension,
             embedding_model=self.embedding_model,
             collection_name=collection_name,
         )
@@ -287,18 +281,6 @@ class DocumentRetriever:
     def initialize_vector_store(self):
         self.vector_store.reset_collection()
         self.vector_store = vector_utils.get_vector_store(
-            vector_type=config.vector_store.vector_type,
             data_path=config.vector_store.data_path,
             embedding_model=self.embedding_model,
-            dimension=config.embeddings.dimension,
         )
-
-    # def filter_unique_documents(self, documents):
-    #     ids = self.vector_store.get(where={"source":documents[0].metadata["source"]}, include=[])
-    #     print(f"Doc Ids : {ids}")
-    #     for doc in documents:
-    #         print(f"Check Id: {doc.id}")
-    #         if doc.metadata["id"] in ids:
-    #             print(f"Duplicate Id: {doc.id}")
-    #         else:
-    #             print(f"Unique id: {doc.id}")
