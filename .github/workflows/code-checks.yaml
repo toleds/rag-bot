@@ -33,4 +33,4 @@ jobs:
 
       # Step 5: Run ruff
       - name: Run ruff
-        run: ruff .
+        run: ruff check .
