@@ -3,7 +3,7 @@ import shutil
 
 from fastapi.background import BackgroundTasks
 
-from application import document_retriever, llm_service
+from adapter import document_retriever, llm_service
 from common import file_utils
 from config import config
 

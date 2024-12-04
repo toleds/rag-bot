@@ -3,7 +3,7 @@ import re
 
 from starlette.responses import StreamingResponse
 
-from application import llm_service
+from adapter import llm_service
 from domain.model import State
 from fastapi import APIRouter
 
