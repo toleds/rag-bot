@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from starlette.middleware.base import RequestResponseEndpoint
 
+
 def configure(app: FastAPI) -> None:
     app.middleware("http")(_add_process_time_header)
     app.add_middleware(
@@ -16,9 +17,10 @@ def configure(app: FastAPI) -> None:
         allow_headers=["*"],
     )
 
+
 async def _add_process_time_header(
-            request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    request: Request, call_next: RequestResponseEndpoint
+) -> Response:
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time

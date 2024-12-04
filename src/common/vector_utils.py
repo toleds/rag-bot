@@ -7,7 +7,13 @@ from faiss import IndexFlatL2
 from langchain_community.docstore.in_memory import InMemoryDocstore
 
 
-def get_vector_store(vector_type: str, data_path, embedding_model, dimension: int, collection_name: str = "default"):
+def get_vector_store(
+    vector_type: str,
+    data_path,
+    embedding_model,
+    dimension: int,
+    collection_name: str = "default",
+):
     """
     decide which vector store to use
 
@@ -19,10 +25,16 @@ def get_vector_store(vector_type: str, data_path, embedding_model, dimension: in
     :return:
     """
     # Decide which vector store to use (Chroma or FAISS)
-    if vector_type == 'chroma':
-        return get_chroma_instance(data_path=data_path, embedding_model=embedding_model, collection_name=collection_name)
-    elif vector_type == 'faiss':
-        return get_faiss_instance(data_path=data_path, embedding_model=embedding_model, dimension=dimension)
+    if vector_type == "chroma":
+        return get_chroma_instance(
+            data_path=data_path,
+            embedding_model=embedding_model,
+            collection_name=collection_name,
+        )
+    elif vector_type == "faiss":
+        return get_faiss_instance(
+            data_path=data_path, embedding_model=embedding_model, dimension=dimension
+        )
     else:
         raise ValueError(f"Unsupported vector store: {vector_type}")
 
@@ -36,7 +48,11 @@ def get_chroma_instance(data_path, embedding_model, collection_name: str = "defa
     :param embedding_model:
     :return:
     """
-    return Chroma(persist_directory=data_path, embedding_function=embedding_model, collection_name=collection_name)
+    return Chroma(
+        persist_directory=data_path,
+        embedding_function=embedding_model,
+        collection_name=collection_name,
+    )
 
 
 def _init_faiss_instance(embedding_model, dimension: int):
@@ -54,7 +70,9 @@ def _init_faiss_instance(embedding_model, dimension: int):
         embedding_function=embedding_model,
         index=index,
         docstore=InMemoryDocstore(),
-        index_to_docstore_id={})
+        index_to_docstore_id={},
+    )
+
 
 def clear_database(path: str):
     """
@@ -78,8 +96,9 @@ def get_faiss_instance(data_path, embedding_model, dimension: int):
     """
 
     # Check if the necessary files exist
-    if (not os.path.exists(os.path.join(data_path, "index.faiss"))
-            or not os.path.exists(os.path.join(data_path, "index.pkl"))):
+    if not os.path.exists(os.path.join(data_path, "index.faiss")) or not os.path.exists(
+        os.path.join(data_path, "index.pkl")
+    ):
         print("Initializing a new FAISS index...")
         # Initialize FAISS and save it
         vector_store = _init_faiss_instance(embedding_model, dimension)
@@ -87,11 +106,11 @@ def get_faiss_instance(data_path, embedding_model, dimension: int):
         print("FAISS index and doc store have been initialized.")
     else:
         # Load existing vector store
-        vector_store = FAISS.load_local(folder_path=data_path,
-                                        embeddings=embedding_model,
-                                        allow_dangerous_deserialization=True)
+        vector_store = FAISS.load_local(
+            folder_path=data_path,
+            embeddings=embedding_model,
+            allow_dangerous_deserialization=True,
+        )
         print("Loaded existing FAISS vector store.")
 
     return vector_store
-
-

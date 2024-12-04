@@ -9,6 +9,7 @@ from fastapi import APIRouter
 
 router = APIRouter(tags=["Question-Answer"])
 
+
 @router.post("/question-answer")
 async def question_answer(request: QuestionAnswerRequest):
     """
@@ -17,20 +18,30 @@ async def question_answer(request: QuestionAnswerRequest):
     :return:
     """
     # get answer from LLM (final format)
-    response_answer, collection = await document_retriever.question_answer(request.query)
+    response_answer, collection = await document_retriever.question_answer(
+        request.query
+    )
 
     # Extract only `source` and `page` fields
-    source = [
-        {"source": doc.metadata.get("source", None), "page": doc.metadata.get("page", None)}
-        for doc in response_answer["source_documents"]
-    ] if response_answer["source_documents"] is not None else None
+    source = (
+        [
+            {
+                "source": doc.metadata.get("source", None),
+                "page": doc.metadata.get("page", None),
+            }
+            for doc in response_answer["source_documents"]
+        ]
+        if response_answer["source_documents"] is not None
+        else None
+    )
 
     return QuestionAnswerResponse(
         query=request.query,
         collection=collection,
         result=response_answer["result"],
-        source=source
+        source=source,
     )
+
 
 @router.post("/question")
 async def question(request: QuestionAnswerRequest):
@@ -40,21 +51,26 @@ async def question(request: QuestionAnswerRequest):
     :return:
     """
     # get answer from LLM (final format)
-    response_answer, collection = await document_retriever.question_answer(request.query)
-    formatted_response = re.sub(r'\\n', '\n', response_answer["result"])
+    response_answer, collection = await document_retriever.question_answer(
+        request.query
+    )
+    formatted_response = re.sub(r"\\n", "\n", response_answer["result"])
 
     return formatted_response
 
+
 @router.post("/question-stream")
-async def question(request: QuestionAnswerRequest):
+async def question_stream(request: QuestionAnswerRequest):
     """
 
     :param request:
     :return:
     """
     # get answer from LLM (final format)
-    response_answer, collection = await document_retriever.question_answer(request.query)
-    formatted_response = re.sub(r'\\n', '\n', response_answer["result"])
+    response_answer, collection = await document_retriever.question_answer(
+        request.query
+    )
+    formatted_response = re.sub(r"\\n", "\n", response_answer["result"])
 
     async def response_generator():
         # Simulate chunking by splitting the response into lines
@@ -64,4 +80,3 @@ async def question(request: QuestionAnswerRequest):
 
     # Return a StreamingResponse
     return StreamingResponse(response_generator(), media_type="text/plain")
-

@@ -11,6 +11,7 @@ from fastapi import HTTPException
 from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 
+
 class DocumentRetriever:
     def __init__(self):
         """
@@ -26,15 +27,15 @@ class DocumentRetriever:
         self.worker_task = None
         self.isProcessing = False
 
-        self.embedding_model = llm_utils.get_embedding_model(config.embeddings.embedding_type, config.embeddings.embedding_model)
+        self.embedding_model = llm_utils.get_embedding_model(
+            config.embeddings.embedding_type, config.embeddings.embedding_model
+        )
 
         # setup vector_store, retriever, llm
         self.get_or_create_collection()
 
-
-
     async def _worker(self):
-        """ Worker task that processes batches of documents from the queue. """
+        """Worker task that processes batches of documents from the queue."""
         while self.isProcessing:
             # Get the next batch of documents from the queue
             task = await self.queue.get()
@@ -56,12 +57,15 @@ class DocumentRetriever:
 
         return self.worker_task
 
-
-    async def add_documents(self, documents: list[Document], store_documents: bool = False):
-        """ Add documents to the queue for processing. """
+    async def add_documents(
+        self, documents: list[Document], store_documents: bool = False
+    ):
+        """Add documents to the queue for processing."""
         self.isProcessing = True
-        await self.queue.put((documents,store_documents))
-        print(f"Queued  {len(documents)} chunks to the queue. Total documents are {self.queue.qsize()}")
+        await self.queue.put((documents, store_documents))
+        print(
+            f"Queued  {len(documents)} chunks to the queue. Total documents are {self.queue.qsize()}"
+        )
 
         # Start the worker
         if not self.worker_task:
@@ -80,7 +84,7 @@ class DocumentRetriever:
         stripped_path = f"{config.vector_store.resource_path}/"
 
         for doc in documents:
-            source:str = doc.metadata.get("source").replace(stripped_path, "", 1)
+            source: str = doc.metadata.get("source").replace(stripped_path, "", 1)
 
             if source.lower().endswith(".pdf"):
                 page = doc.metadata.get("page")
@@ -102,7 +106,6 @@ class DocumentRetriever:
         # Add documents to the vector store
         await self._add_documents_in_batches(documents)
 
-
     async def _add_documents_in_batches(self, documents, batch_size=1000):
         print(f"Total chunks to add: {len(documents)}")
         # Split the documents into batches
@@ -117,7 +120,9 @@ class DocumentRetriever:
 
             try:
                 # Add the batch of documents asynchronously
-                print(f"Adding batch {i + 1}/{num_batches} with {len(batch)} chunks on collection {self.vector_store._collection_name}.")
+                print(
+                    f"Adding batch {i + 1}/{num_batches} with {len(batch)} chunks on collection {self.vector_store._collection_name}."
+                )
                 tasks.append(self.vector_store_retriever.aadd_documents(batch))
                 print(f"Batch {i + 1}/{num_batches} with {len(batch)} chunks added.")
             except Exception as e:
@@ -137,10 +142,15 @@ class DocumentRetriever:
         results = await self.vector_store_retriever.ainvoke(query_text)
 
         if not results:
-            raise HTTPException(status_code=404, detail="No similar documents found.  Kindly refine your query.")
+            raise HTTPException(
+                status_code=404,
+                detail="No similar documents found.  Kindly refine your query.",
+            )
 
         print(f"Results from aget_relevant_documents: {results}")
-        print(f"Search Type : {self.vector_store_retriever.search_type} of {self.vector_store_retriever.allowed_search_types}")
+        print(
+            f"Search Type : {self.vector_store_retriever.search_type} of {self.vector_store_retriever.allowed_search_types}"
+        )
 
         return results, self.vector_store._collection_name
 
@@ -152,12 +162,17 @@ class DocumentRetriever:
         :param query_text:
         :return:
         """
-        results = await self.vector_store.asimilarity_search_with_score(query_text, k=10)
+        results = await self.vector_store.asimilarity_search_with_score(
+            query_text, k=10
+        )
         filtered_results = [doc for doc, score in results if score < filter_score]
 
         # If the response is empty, raise 404
         if not filtered_results:
-            raise HTTPException(status_code=404, detail="No similar documents found.  Kindly refine your query.")
+            raise HTTPException(
+                status_code=404,
+                detail="No similar documents found.  Kindly refine your query.",
+            )
 
         return filtered_results
 
@@ -173,7 +188,10 @@ class DocumentRetriever:
 
         # If the response is empty, raise 404
         if not results:
-            raise HTTPException(status_code=404, detail="No similar documents found.  Kindly refine your query.")
+            raise HTTPException(
+                status_code=404,
+                detail="No similar documents found.  Kindly refine your query.",
+            )
 
         return results
 
@@ -185,7 +203,10 @@ class DocumentRetriever:
         :return:
         """
         print("Sending to LLM to answer...")
-        return await self.qa._acall({"query": query_text}), self.vector_store._collection_name
+        return (
+            await self.qa._acall({"query": query_text}),
+            self.vector_store._collection_name,
+        )
 
     def store_documents(self):
         """
@@ -194,43 +215,51 @@ class DocumentRetriever:
         :return:
         """
         try:
-            if config.vector_store.vector_type == 'chroma':
+            if config.vector_store.vector_type == "chroma":
                 # self.vector_store.persist()  # Chroma uses persist
                 pass
-            elif config.vector_store.vector_type == 'faiss':
-                self.vector_store.save_local(config.vector_store.data_path)  # FAISS uses save_local
+            elif config.vector_store.vector_type == "faiss":
+                self.vector_store.save_local(
+                    config.vector_store.data_path
+                )  # FAISS uses save_local
                 # Load the vector after saving
                 self.vector_store.load_local(
                     folder_path=config.vector_store.data_path,
                     embeddings=self.embedding_model,
-                    allow_dangerous_deserialization=True)
+                    allow_dangerous_deserialization=True,
+                )
 
             print("Document successfully stored.")
         except Exception as e:
             # Catching any exceptions to print a debug message
             print(f"An error occurred during storing documents: {e}")
 
-
     def get_or_create_collection(self, collection_name: str = "default"):
         # get the vector store instance
-        self.vector_store = vector_utils.get_vector_store(vector_type=config.vector_store.vector_type,
-                                                          data_path=config.vector_store.data_path,
-                                                          dimension=config.embeddings.dimension,
-                                                          embedding_model=self.embedding_model,
-                                                          collection_name=collection_name)
+        self.vector_store = vector_utils.get_vector_store(
+            vector_type=config.vector_store.vector_type,
+            data_path=config.vector_store.data_path,
+            dimension=config.embeddings.dimension,
+            embedding_model=self.embedding_model,
+            collection_name=collection_name,
+        )
 
-        self.vector_store_retriever = self.vector_store.as_retriever(search_type="mmr", search_kwargs={"k":10})
+        self.vector_store_retriever = self.vector_store.as_retriever(
+            search_type="mmr", search_kwargs={"k": 10}
+        )
 
         # get te collection (default is "default")
         print(f"Current collection in use {self.vector_store._collection_name}")
 
         # Initialize the language model (OpenAI for QA)
-        self.llm = llm_utils.get_llm(llm_type=config.llms.llm_type,
-                                     model_name=config.llms.llm_name,
-                                     local_server=config.llms.local_server)
+        self.llm = llm_utils.get_llm(
+            llm_type=config.llms.llm_type,
+            model_name=config.llms.llm_name,
+            local_server=config.llms.local_server,
+        )
 
         # Set up the RetrievalQA chain
-        template =  """
+        template = """
         Use ONLY the following pieces of context below to answer the question and DO NOT add any information outside of it.  
         If context information provided is missing, just say you don't know, don't make up an answer. Always say "thanks for asking!" at the end of the answer. 
         
@@ -241,26 +270,28 @@ class DocumentRetriever:
         Helpful Answer:
         """
         prompt_template = PromptTemplate.from_template(template)
-        self.qa = RetrievalQA.from_chain_type(llm=self.llm,
-                                              chain_type="stuff",
-                                              retriever=self.vector_store_retriever,
-                                              verbose=True,
-                                              return_source_documents=True,
-                                              chain_type_kwargs={"prompt": prompt_template})
+        self.qa = RetrievalQA.from_chain_type(
+            llm=self.llm,
+            chain_type="stuff",
+            retriever=self.vector_store_retriever,
+            verbose=True,
+            return_source_documents=True,
+            chain_type_kwargs={"prompt": prompt_template},
+        )
 
-        return  self.vector_store._collection_name
+        return self.vector_store._collection_name
 
     def get_collection_list(self):
         return self.vector_store._client.list_collections()
 
-
     def initialize_vector_store(self):
         self.vector_store.reset_collection()
-        self.vector_store = vector_utils.get_vector_store(vector_type=config.vector_store.vector_type,
-                                                   data_path=config.vector_store.data_path,
-                                                   embedding_model=self.embedding_model,
-                                                   dimension=config.embeddings.dimension)
-
+        self.vector_store = vector_utils.get_vector_store(
+            vector_type=config.vector_store.vector_type,
+            data_path=config.vector_store.data_path,
+            embedding_model=self.embedding_model,
+            dimension=config.embeddings.dimension,
+        )
 
     # def filter_unique_documents(self, documents):
     #     ids = self.vector_store.get(where={"source":documents[0].metadata["source"]}, include=[])
@@ -271,7 +302,3 @@ class DocumentRetriever:
     #             print(f"Duplicate Id: {doc.id}")
     #         else:
     #             print(f"Unique id: {doc.id}")
-
-
-
-

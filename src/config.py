@@ -6,10 +6,12 @@ from pydantic import ValidationError
 
 load_dotenv()
 
+
 class VectorStoreConfig(BaseSettings):
     vector_type: str
     data_path: str
     resource_path: str
+
 
 class LlmConfig(BaseSettings):
     llm_type: str
@@ -18,10 +20,12 @@ class LlmConfig(BaseSettings):
     api_key: str
     local_server: str
 
+
 class Embeddings(BaseSettings):
     embedding_model: str
     embedding_type: str
     dimension: int
+
 
 class AppConfig(BaseSettings):
     vector_store: VectorStoreConfig
@@ -31,6 +35,7 @@ class AppConfig(BaseSettings):
     class Config:
         env_file = "/.env"  # Specify the path to your .env file
         env_nested_delimiter = "__"  # Allow nested environment variable syntax
+
 
 try:
     config = AppConfig()

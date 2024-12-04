@@ -1,4 +1,3 @@
-
 def format_context(documents, truncate: bool = True):
     """
     reformat document to String

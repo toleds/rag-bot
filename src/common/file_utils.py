@@ -6,7 +6,9 @@ from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_core.documents import Document
 
 
-def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> List[Document]:
+def extract_text_from_pdf(
+    pdf_path: str, chunk_size: int = 1000, chunk_overlap: int = 200
+) -> List[Document]:
     """
     Extracts text from a PDF file, splits the text from each page into chunks, and returns a list of text chunks.
 
@@ -22,18 +24,25 @@ def extract_text_from_pdf(pdf_path: str, chunk_size: int = 1000, chunk_overlap: 
     loader = PyPDFLoader(pdf_path)
     documents = loader.load()
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
-                                                   chunk_overlap=chunk_overlap,
-                                                   length_function=len,
-                                                   is_separator_regex=False)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=len,
+        is_separator_regex=False,
+    )
 
     # Split the text into chunks
     text_chunks = text_splitter.split_documents(documents)
-    print(f"Extracted and split text into {len(text_chunks)} chunks from PDF: {pdf_path}")
+    print(
+        f"Extracted and split text into {len(text_chunks)} chunks from PDF: {pdf_path}"
+    )
 
     return text_chunks
 
-def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> List[Document]:
+
+def extract_text_from_file(
+    file_path: str, chunk_size: int = 1000, chunk_overlap: int = 200
+) -> List[Document]:
     """
     Extracts text from a plain text file, splits it into chunks, and returns a list of text chunks.
 
@@ -49,13 +58,17 @@ def extract_text_from_file(file_path: str, chunk_size: int = 1000, chunk_overlap
     loader = TextLoader(file_path)
     documents = loader.load()
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
-                                                   chunk_overlap=chunk_overlap,
-                                                   length_function=len,
-                                                   is_separator_regex=False)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=len,
+        is_separator_regex=False,
+    )
 
     # Split the text into chunks
     text_chunks = text_splitter.split_documents(documents)
-    print(f"Extracted and split text into {len(text_chunks)} chunks from file: {file_path}")
+    print(
+        f"Extracted and split text into {len(text_chunks)} chunks from file: {file_path}"
+    )
 
     return text_chunks

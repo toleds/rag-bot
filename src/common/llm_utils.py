@@ -3,7 +3,11 @@ from langchain_community.llms.ollama import Ollama
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import OpenAIEmbeddings, OpenAI
 
-def get_embedding_model(embedding_type: str = "openai", embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
+
+def get_embedding_model(
+    embedding_type: str = "openai",
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
+):
     """
     decide which embedding model to use
 
@@ -18,6 +22,7 @@ def get_embedding_model(embedding_type: str = "openai", embedding_model: str = "
         return get_huggingface_embedding(embedding_model=embedding_model)
     else:
         raise ValueError(f"Unsupported embedding: {embedding_model}")
+
 
 def get_llm(llm_type: str, model_name: str, local_server: str):
     """
@@ -34,12 +39,14 @@ def get_llm(llm_type: str, model_name: str, local_server: str):
     elif llm_type == "huggingface":
         return get_hugging_face_llm(model_name=model_name)
     elif llm_type == "ollama":
-        return get_ollama_llm(model_name= model_name, local_server=local_server)
+        return get_ollama_llm(model_name=model_name, local_server=local_server)
     else:
         raise ValueError(f"Unsupported llm: {llm_type}")
 
 
-def get_openai_embedding(embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
+def get_openai_embedding(
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
+):
     """
     OpenAI embedding model
 
@@ -47,13 +54,17 @@ def get_openai_embedding(embedding_model: str = "sentence-transformers/all-MiniL
     """
     return OpenAIEmbeddings(model=embedding_model)  # default embedding model
 
-def get_huggingface_embedding(embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
+
+def get_huggingface_embedding(
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
+):
     """
     HuggingFace embedding model
 
     :return:
     """
-    return HuggingFaceEmbeddings(model_name = embedding_model)
+    return HuggingFaceEmbeddings(model_name=embedding_model)
+
 
 def get_openai_llm(model_name: str):
     """
@@ -63,6 +74,7 @@ def get_openai_llm(model_name: str):
     """
     return OpenAI(model_name=model_name)
 
+
 def get_hugging_face_llm(model_name: str):
     """
     HuggingFace LLM
@@ -71,6 +83,7 @@ def get_hugging_face_llm(model_name: str):
     :return:
     """
     return HuggingFaceHub(repo_id=model_name)
+
 
 def get_ollama_llm(model_name: str, local_server: str):
     """
