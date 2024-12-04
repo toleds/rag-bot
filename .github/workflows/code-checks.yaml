@@ -31,6 +31,6 @@ jobs:
       - name: Run Black
         run: black --check .
 
-      # Step 4: Run ruff
+      # Step 5: Run ruff
       - name: Run ruff
-        run: ruff src
+        run: ruff .
