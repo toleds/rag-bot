@@ -28,20 +28,9 @@ langchain-openapi = "^0.1.1"
 langchain-chroma = "^0.1.4"
 
 
-
 [tool.poetry.dev-dependencies]
-pylint = "^2.15.0"
 black = "^23.3.0"
-
-[tool.pylint]
-disable = [
-    "C0114", # Missing module docstring
-    "C0116", # Missing function or method docstring
-]
-max-line-length = 88
-good-names = ["i", "j", "k", "e", "id", "df"]
-persistent = true
-reports = false
+ruff = "^0.8.1"
 
 [tool.black]
 line-length = 88
@@ -52,8 +41,16 @@ exclude = '''
   | \.pytest_cache
   | build
   | dist
+  | docs
+  | .venv
 )/
 '''
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F"]
+ignore = ["E501"]
+exclude = ["tests/", ".venv/", "docs/"]
 
 [build-system]
 requires = ["poetry-core"]
