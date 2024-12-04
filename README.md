@@ -11,7 +11,7 @@ and summarize responses based on the information retrieved through RAG.
 
 The diagram below defines the flow.
 
-![image info](./rag-bot.drawio.png)
+![image info](docs/rag-bot.drawio.png)
 
 # Sample Response
 
