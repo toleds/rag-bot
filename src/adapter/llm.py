@@ -40,7 +40,7 @@ class LlmService:
 
         return {"answer": response.content}
 
-    async def init_llm(self):
+    def init_llm(self):
         # Initialize the language model (OpenAI for QA)
         self.llm = llm_utils.get_llm(
             llm_type=config.llms.llm_type,
