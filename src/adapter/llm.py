@@ -24,19 +24,22 @@ class LlmService:
         self.prompt_template = PromptTemplate.from_template(template)
         self.init_llm()
 
-    async def generate_response(self, query: str, documents: List[Document]):
+    async def generate_response(
+        self, query: str, documents: List[Document], history: str
+    ):
         """
         QA the LLM
 
+        :param history:
         :param documents:
         :param query:
         :return:
         """
         # get elevant context
-        docs_content = "\n\n".join(doc.page_content for doc in documents)
-        messages = self.prompt_template.invoke(
-            {"question": query, "context": docs_content}
-        )
+        context = "\n\n".join(doc.page_content for doc in documents)
+        # context = f"History : {history} \n {context}"
+
+        messages = self.prompt_template.invoke({"question": query, "context": context})
 
         print("Sending to LLM to answer...")
         response = await self.llm.ainvoke(messages)

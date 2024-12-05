@@ -21,7 +21,7 @@ async def similarity_search(query: str):
     :return:
     """
     # get similarities
-    response_similarities = await document_retriever.retrieve({"question": query})
+    documents = await document_retriever.retrieve(query)
 
     # Extract document fields and score into a dictionary
     response_data = [
@@ -29,7 +29,7 @@ async def similarity_search(query: str):
             "document": doc.page_content,  # Assuming the content of the document
             "metadata": doc.metadata,  # Document metadata (like source, author, etc.)
         }
-        for (doc) in response_similarities["documents"]
+        for (doc) in documents
     ]
 
     return JSONResponse(

@@ -16,6 +16,8 @@ class QuestionAnswerResponse(BaseModel):
 
 
 class State(TypedDict):
+    user_id: str
     question: str
     documents: List[Document]
     answer: str
+    history: list
