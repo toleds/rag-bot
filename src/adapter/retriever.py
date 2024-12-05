@@ -5,7 +5,6 @@ from common import vector_utils, llm_utils
 from config import config
 from fastapi import HTTPException
 from langchain_core.documents import Document
-from domain.model import State
 
 
 class DocumentRetriever:
@@ -121,14 +120,14 @@ class DocumentRetriever:
         await asyncio.gather(*tasks)
         print("Document batches added.")
 
-    async def retrieve(self, state: State):
+    async def retrieve(self, query: str):
         """
         Search the vector store.
 
         :return:
         """
 
-        documents = await self.vector_store_retriever.ainvoke(state["question"])
+        documents = await self.vector_store_retriever.ainvoke(query)
 
         if not documents:
             raise HTTPException(
@@ -136,7 +135,7 @@ class DocumentRetriever:
                 detail="No similar documents found.  Kindly refine your query.",
             )
 
-        return {"documents": documents}
+        return documents
 
     def get_or_create_collection(self, collection_name: str = "default"):
         # get the vector store instance

@@ -1,7 +1,9 @@
+from typing import List
+
 from common import llm_utils
 from config import config
-from domain.model import State
 
+from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
 
 
@@ -22,23 +24,24 @@ class LlmService:
         self.prompt_template = PromptTemplate.from_template(template)
         self.init_llm()
 
-    async def generate(self, state: State):
+    async def generate_response(self, query: str, documents: List[Document]):
         """
         QA the LLM
 
-        :param state:
+        :param documents:
+        :param query:
         :return:
         """
         # get elevant context
-        docs_content = "\n\n".join(doc.page_content for doc in state["documents"])
+        docs_content = "\n\n".join(doc.page_content for doc in documents)
         messages = self.prompt_template.invoke(
-            {"question": state["question"], "context": docs_content}
+            {"question": query, "context": docs_content}
         )
 
         print("Sending to LLM to answer...")
         response = await self.llm.ainvoke(messages)
 
-        return {"answer": response.content}
+        return response
 
     def init_llm(self):
         # Initialize the language model (OpenAI for QA)
