@@ -3,13 +3,12 @@ import shutil
 
 from fastapi.background import BackgroundTasks
 
-from application import document_retriever
+from adapter import document_retriever, llm_service
 from common import file_utils
 from config import config
 
 from fastapi import UploadFile, File, APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
-
 
 router = APIRouter(tags=["Document-Retriever"])
 
@@ -22,7 +21,7 @@ async def similarity_search(query: str):
     :return:
     """
     # get similarities
-    response_similarities, collection = await document_retriever.search(query)
+    response_similarities = await document_retriever.retrieve({"question": query})
 
     # Extract document fields and score into a dictionary
     response_data = [
@@ -30,37 +29,12 @@ async def similarity_search(query: str):
             "document": doc.page_content,  # Assuming the content of the document
             "metadata": doc.metadata,  # Document metadata (like source, author, etc.)
         }
-        for (doc) in response_similarities
+        for (doc) in response_similarities["documents"]
     ]
 
     return JSONResponse(
-        content={"collection": collection, "similarity_search": response_data},
+        content={"similarity_search": response_data},
         status_code=status.HTTP_200_OK,
-    )
-
-
-@router.get("/similarity-search-with-score")
-async def similarity_search_with_score(query: str):
-    """
-
-    :param query:
-    :return:
-    """
-    # get similarities
-    response_similarities = await document_retriever.search_with_score_no_fiter(query)
-
-    # Extract document fields and score into a dictionary
-    response_data = [
-        {
-            "document": doc.page_content,  # Assuming the content of the document
-            "metadata": doc.metadata,  # Document metadata (like source, author, etc.)
-            "score": f"{score}",  # Similarity score
-        }
-        for (doc, score) in response_similarities
-    ]
-
-    return JSONResponse(
-        content={"similarity_search": response_data}, status_code=status.HTTP_200_OK
     )
 
 
@@ -113,9 +87,14 @@ async def _process_document(file_extension: str, file_path: str):
 
 @router.post("/switch-collection")
 async def create_collection(collection_name: str):
+    # init collection
     collection = document_retriever.get_or_create_collection(
         collection_name=collection_name
     )
+
+    # init llm
+    llm_service.init_llm()
+
     return {"collection": collection}
 
 
@@ -126,13 +105,3 @@ async def list_collection():
         {"collection_name": collection.name} for collection in collections
     ]
     return json.dumps(collection_dict, indent=4)
-
-
-@router.post("/initialize-vector-store")
-async def initialize_db():
-    """
-
-    :return:
-    """
-    document_retriever.initialize_vector_store()
-    return {"status": "Vector store initialized!"}

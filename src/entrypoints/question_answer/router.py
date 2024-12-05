@@ -1,80 +1,41 @@
 import asyncio
-import re
 
 from starlette.responses import StreamingResponse
 
-from application import document_retriever
-from domain.model import QuestionAnswerRequest, QuestionAnswerResponse
+from domain.model import QuestionAnswerRequest
 from fastapi import APIRouter
+from manager import chat_manager
 
 router = APIRouter(tags=["Question-Answer"])
 
 
-@router.post("/question-answer")
-async def question_answer(request: QuestionAnswerRequest):
+@router.post("/generate")
+async def generate(request: QuestionAnswerRequest):
     """
 
     :param request:
     :return:
     """
     # get answer from LLM (final format)
-    response_answer, collection = await document_retriever.question_answer(
-        request.query
-    )
+    response = await chat_manager.process_message(request.query)
 
-    # Extract only `source` and `page` fields
-    source = (
-        [
-            {
-                "source": doc.metadata.get("source", None),
-                "page": doc.metadata.get("page", None),
-            }
-            for doc in response_answer["source_documents"]
-        ]
-        if response_answer["source_documents"] is not None
-        else None
-    )
-
-    return QuestionAnswerResponse(
-        query=request.query,
-        collection=collection,
-        result=response_answer["result"],
-        source=source,
-    )
+    return response
 
 
-@router.post("/question")
-async def question(request: QuestionAnswerRequest):
+@router.post("/generate-stream")
+async def generate_stream(request: QuestionAnswerRequest):
     """
 
     :param request:
     :return:
     """
     # get answer from LLM (final format)
-    response_answer, collection = await document_retriever.question_answer(
-        request.query
-    )
-    formatted_response = re.sub(r"\\n", "\n", response_answer["result"])
-
-    return formatted_response
-
-
-@router.post("/question-stream")
-async def question_stream(request: QuestionAnswerRequest):
-    """
-
-    :param request:
-    :return:
-    """
-    # get answer from LLM (final format)
-    response_answer, collection = await document_retriever.question_answer(
-        request.query
-    )
-    formatted_response = re.sub(r"\\n", "\n", response_answer["result"])
+    response = await chat_manager.process_message(request.query)
+    print("\n\n")
 
     async def response_generator():
         # Simulate chunking by splitting the response into lines
-        for line in formatted_response.splitlines():
+        for line in response.splitlines():
             yield line + "\n"
             await asyncio.sleep(0.1)  # Optional: Simulate delay for streaming effect
 

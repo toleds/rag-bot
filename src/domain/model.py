@@ -1,5 +1,6 @@
-from typing import Optional
+from typing_extensions import Optional, List, TypedDict
 
+from langchain_core.documents import Document
 from pydantic import BaseModel
 
 
@@ -12,3 +13,9 @@ class QuestionAnswerResponse(BaseModel):
     collection: str
     result: Optional[str] = None
     source: Optional[list] = None
+
+
+class State(TypedDict):
+    question: str
+    documents: List[Document]
+    answer: str
