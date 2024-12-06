@@ -3,7 +3,6 @@ import asyncio
 
 from common import vector_utils, llm_utils
 from config import config
-from fastapi import HTTPException
 from langchain_core.documents import Document
 
 
@@ -120,20 +119,20 @@ class DocumentRetriever:
         await asyncio.gather(*tasks)
         print("Document batches added.")
 
-    async def retrieve(self, query: str):
+    def retrieve(self, query: str):
         """
         Search the vector store.
 
         :return:
         """
 
-        documents = await self.vector_store_retriever.ainvoke(query)
+        documents = self.vector_store_retriever.invoke(query)
 
-        if not documents:
-            raise HTTPException(
-                status_code=404,
-                detail="No similar documents found.  Kindly refine your query.",
-            )
+        # if not documents:
+        #     raise HTTPException(
+        #         status_code=404,
+        #         detail="No similar documents found.  Kindly refine your query.",
+        #     )
 
         return documents
 
