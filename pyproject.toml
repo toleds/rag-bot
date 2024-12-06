@@ -31,6 +31,7 @@ uvicorn = "0.32.1"
 python-multipart = "^0.0.19"
 langgraph = "^0.2.54"
 langchain-ollama = "^0.2.1"
+pypdf = "^5.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.0.1"

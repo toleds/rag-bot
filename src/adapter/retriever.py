@@ -50,6 +50,7 @@ class DocumentRetriever:
     async def add_documents(self, documents: list[Document]):
         """Add documents to the queue for processing."""
         self.isProcessing = True
+        print(f"Adding to queue: {len(documents)} documents.")
         await self.queue.put(documents)
         print(
             f"Queued  {len(documents)} chunks to the queue. Total documents are {self.queue.qsize()}"
@@ -94,7 +95,7 @@ class DocumentRetriever:
         # Add documents to the vector store
         await self._add_documents_in_batches(documents)
 
-    async def _add_documents_in_batches(self, documents, batch_size=1000):
+    async def _add_documents_in_batches(self, documents, batch_size=10):
         print(f"Total chunks to add: {len(documents)}")
         # Split the documents into batches
         num_batches = math.ceil(len(documents) / batch_size)
@@ -111,7 +112,7 @@ class DocumentRetriever:
                 print(
                     f"Adding batch {i + 1}/{num_batches} with {len(batch)} chunks on collection {self.vector_store._collection_name}."
                 )
-                tasks.append(self.vector_store_retriever.aadd_documents(batch))
+                tasks.append(self.vector_store.aadd_documents(batch))
                 print(f"Batch {i + 1}/{num_batches} with {len(batch)} chunks added.")
             except Exception as e:
                 print(f"Exception: {e}")

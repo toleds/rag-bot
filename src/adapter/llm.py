@@ -58,7 +58,7 @@ class LlmService:
         # form the prompt to send to llm
         prompt = [SystemMessage(message_context.to_string())] + conversation_messages
 
-        print(f"Sending to LLM to answer...\n{prompt}")
+        print(f"Sending to LLM to answer: {prompt}")
         response = await self.llm.ainvoke(prompt)
 
         return response

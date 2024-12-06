@@ -22,7 +22,7 @@ class GraphManager:
 
             # invoke tool
             llm_with_tools = llm_service.llm.bind_tools([retrieve_documents])
-            response = llm_with_tools.invoke(human_message.content)
+            response = llm_with_tools.invoke(state["messages"])
 
             # MessagesState appends messages to state instead of overwriting
             return {"messages": [response]}
