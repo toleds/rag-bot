@@ -23,9 +23,7 @@ class GraphManager:
         def query_or_respond(state: MessagesState):
             """Generate tool call for retrieval or respond."""
             llm_with_tools = llm_service.llm.bind_tools([retrieve_documents])
-            response = llm_with_tools.invoke(
-                state["messages"][-10:]
-            )  # pass only last 10 in history
+            response = llm_with_tools.invoke(state["messages"])
 
             # MessagesState appends messages to state instead of overwriting
             return {"messages": [response]}

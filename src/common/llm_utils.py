@@ -86,7 +86,7 @@ def get_hugging_face_llm(model_name: str):
     :param model_name:
     :return:
     """
-    llm = HuggingFaceEndpoint(repo_id=model_name, max_new_tokens=2048)
+    llm = HuggingFaceEndpoint(repo_id=model_name)
 
     return ChatHuggingFace(llm=llm)
 
