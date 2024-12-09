@@ -1,46 +1,72 @@
-from adapter import document_retriever, llm_service
-from domain.model import State
-from langgraph.graph import StateGraph, START
+from typing_extensions import Annotated
 
-from manager.memory_manager import MemoryManager
+from adapter import document_retriever, llm_service
+from langchain_core.tools import tool, InjectedToolArg
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import StateGraph, END, MessagesState
+from langgraph.prebuilt import ToolNode, tools_condition
 
 
 class GraphManager:
     def __init__(self):
-        self.memory_manager = MemoryManager()
+        self.graph = None
+        self.memory = MemorySaver()
+
+    async def initialize_graph_once(self):
+        if not self.graph:
+            self.graph = await self.initialize_graph()
+
+    async def get_graph(self):
+        await self.initialize_graph_once()
+        return self.graph
 
     async def initialize_graph(self):
-        # define workflows
+        # Step 1: Generate an AIMessage that may include a tool-call to be sent.
+        def query_or_respond(state: MessagesState):
+            """Generate tool call for retrieval or respond."""
+            llm_with_tools = llm_service.llm.bind_tools([retrieve_documents])
+            response = llm_with_tools.invoke(state["messages"])
 
-        def retrieve_memory(state: State):
-            user_history = self.memory_manager.get_raw_history(state["user_id"])
+            # MessagesState appends messages to state instead of overwriting
+            return {"messages": [response]}
 
-            return {"history": user_history}
+        # Step 2: Define the retrieval tool.
+        @tool(response_format="content_and_artifact")
+        def retrieve_documents(query: Annotated[str, InjectedToolArg]):
+            """Retrieve information related to a query.
 
-        async def retrieve_documents(state: State):
-            documents = await document_retriever.retrieve(state["question"])
-
-            return {"documents": documents}
-
-        async def generate_response(state: State):
-            response = await llm_service.generate_response(
-                state["question"], state["documents"], state["history"]
+            Args:
+                query - Query string
+            """
+            documents = document_retriever.retrieve(query)
+            serialized_documents = "\n\n".join(
+                (f"Source: {doc.metadata}\n" f"Content: {doc.page_content}")
+                for doc in documents
             )
 
-            return {"answer": response}
+            return serialized_documents, documents
 
-        def add_memory(state: State):
-            self.memory_manager.add_to_memory(
-                state["user_id"], state["question"], state["answer"]
-            )
+        # Step 2: Execute the retrieval.
+        tools = ToolNode([retrieve_documents])
 
-            return state
+        # Step 3: generate LLM response
+        def generate_response(state: MessagesState):
+            response = llm_service.generate_response(state["messages"])
+            return {"messages": [response]}
 
-        # return the graph
-        graph = StateGraph(state_schema=State)
-        graph.add_sequence(
-            [retrieve_memory, retrieve_documents, generate_response, add_memory]
+        # build grap workflows
+        graph_builder = StateGraph(MessagesState)
+        graph_builder.add_node(query_or_respond)
+        graph_builder.add_node(tools)
+        graph_builder.add_node(generate_response)
+
+        graph_builder.set_entry_point("query_or_respond")
+        graph_builder.add_conditional_edges(
+            "query_or_respond",
+            tools_condition,
+            {"tools": "tools", END: END},
         )
-        graph.add_edge(START, "retrieve_memory")
+        graph_builder.add_edge("tools", "generate_response")
+        graph_builder.add_edge("generate_response", END)
 
-        return graph.compile()
+        return graph_builder.compile(checkpointer=self.memory)

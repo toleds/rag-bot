@@ -1,5 +1,3 @@
-import asyncio
-
 from starlette.responses import StreamingResponse
 
 from domain.model import QuestionAnswerRequest
@@ -20,7 +18,7 @@ async def generate(request: QuestionAnswerRequest, x_user_id: str = Header(...))
     # get answer from LLM (final format)
     response = await chat_manager.process_message(x_user_id, request.query)
 
-    return response
+    return "\n".join(response.splitlines())
 
 
 @router.post("/generate-stream")
@@ -33,14 +31,12 @@ async def generate_stream(request: QuestionAnswerRequest, x_user_id: str = Heade
     """
     # get answer from LLM (final format)
     response = await chat_manager.process_message(x_user_id, request.query)
-    print("\n\n")
 
     async def response_generator():
         # Simulate chunking by splitting the response into lines
         for line in response.splitlines():
-            print(line)
             yield line + "\n"
-            await asyncio.sleep(0.1)  # Optional: Simulate delay for streaming effect
+            # await asyncio.sleep(0.2)  # Optional: Simulate delay for streaming effect
 
     # Return a StreamingResponse
     return StreamingResponse(response_generator(), media_type="text/plain")

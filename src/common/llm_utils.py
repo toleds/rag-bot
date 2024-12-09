@@ -1,5 +1,5 @@
 from langchain_community.llms.huggingface_hub import HuggingFaceHub
-from langchain_community.llms.ollama import Ollama
+from langchain_ollama import ChatOllama
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import OpenAIEmbeddings, OpenAI
 
@@ -93,4 +93,4 @@ def get_ollama_llm(model_name: str, local_server: str):
     :return:
     """
 
-    return Ollama(model=model_name, base_url=local_server)
+    return ChatOllama(model=model_name, base_url=local_server)

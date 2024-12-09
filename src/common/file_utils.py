@@ -23,7 +23,6 @@ def extract_text_from_pdf(
     # Load the file
     loader = PyPDFLoader(pdf_path)
     documents = loader.load()
-
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,

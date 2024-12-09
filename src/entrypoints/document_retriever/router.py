@@ -1,4 +1,3 @@
-import json
 import shutil
 
 from fastapi.background import BackgroundTasks
@@ -14,14 +13,14 @@ router = APIRouter(tags=["Document-Retriever"])
 
 
 @router.get("/similarity-search")
-async def similarity_search(query: str):
+def similarity_search(query: str):
     """
 
     :param query:
     :return:
     """
     # get similarities
-    documents = await document_retriever.retrieve(query)
+    documents = document_retriever.retrieve(query)
 
     # Extract document fields and score into a dictionary
     response_data = [
@@ -81,8 +80,8 @@ async def _process_document(file_extension: str, file_path: str):
         else file_utils.extract_text_from_pdf(pdf_path=file_path)
     )
 
-    await document_retriever.add_documents(document, True)
-    print(f"Document {file_path} added to the queue.")
+    print(f"Document {file_path} adding to the queue.")
+    await document_retriever.add_documents(document)
 
 
 @router.post("/switch-collection")
@@ -95,7 +94,7 @@ async def create_collection(collection_name: str):
     # init llm
     llm_service.init_llm()
 
-    return {"collection": collection}
+    return JSONResponse(content={"collection": collection})
 
 
 @router.get("/list-collection")
@@ -104,4 +103,4 @@ async def list_collection():
     collection_dict = [
         {"collection_name": collection.name} for collection in collections
     ]
-    return json.dumps(collection_dict, indent=4)
+    return JSONResponse(content=collection_dict)

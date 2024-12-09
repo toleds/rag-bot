@@ -3,7 +3,8 @@ from typing import List
 from common import llm_utils
 from config import config
 
-from langchain_core.documents import Document
+from langchain_core.messages import AnyMessage, SystemMessage
+
 from langchain_core.prompts import PromptTemplate
 
 
@@ -16,33 +17,49 @@ class LlmService:
         Use ONLY the following pieces of context below to answer the question and DO NOT add any information outside of it.  
         If context information provided is missing, just say you don't know, don't make up an answer.
         
-        Question: {question}
-        Context: {context}  
-        Answer:
+        {context}
         """
 
         self.prompt_template = PromptTemplate.from_template(template)
         self.init_llm()
 
-    async def generate_response(
-        self, query: str, documents: List[Document], history: str
-    ):
+    def generate_response(self, messages: List[AnyMessage]):
         """
         QA the LLM
 
-        :param history:
-        :param documents:
-        :param query:
+        :param messages:
         :return:
         """
-        # get elevant context
-        context = "\n\n".join(doc.page_content for doc in documents)
-        # context = f"History : {history} \n {context}"
+        # Get generated ToolMessages
+        recent_messages = []
 
-        messages = self.prompt_template.invoke({"question": query, "context": context})
+        for message in reversed(messages):
+            if message.type == "tool":
+                recent_messages.append(message)
+            else:
+                break
 
-        print("Sending to LLM to answer...")
-        response = await self.llm.ainvoke(messages)
+        chat_messages = recent_messages[::-1]
+
+        # Format into prompt
+        chat_content = "\n\n".join(
+            chat_message.content for chat_message in chat_messages
+        )
+        message_context = self.prompt_template.invoke({"context": chat_content})
+
+        # get conversation messages
+        conversation_messages = [
+            message
+            for message in messages
+            if message.type in ("human", "system")
+            or (message.type == "ai" and not message.tool_calls)
+        ]
+
+        # form the prompt to send to llm
+        prompt = [SystemMessage(message_context.to_string())] + conversation_messages
+
+        print(f"Sending to LLM to answer: {prompt}")
+        response = self.llm.invoke(prompt)
 
         return response
 
