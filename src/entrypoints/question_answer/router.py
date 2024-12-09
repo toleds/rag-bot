@@ -36,7 +36,6 @@ async def generate_stream(request: QuestionAnswerRequest, x_user_id: str = Heade
         # Simulate chunking by splitting the response into lines
         for line in response.splitlines():
             yield line + "\n"
-            # await asyncio.sleep(0.2)  # Optional: Simulate delay for streaming effect
 
     # Return a StreamingResponse
     return StreamingResponse(response_generator(), media_type="text/plain")

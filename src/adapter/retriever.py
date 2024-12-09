@@ -146,8 +146,8 @@ class DocumentRetriever:
         )
 
         self.vector_store_retriever = self.vector_store.as_retriever(
-            search_type="similarity_score_threshold",
-            search_kwargs={"k": 5, "score_threshold": 0.01},
+            search_type="mmr",
+            search_kwargs={"k": 10, "fetch_k": 20},
         )
 
         return self.vector_store._collection_name

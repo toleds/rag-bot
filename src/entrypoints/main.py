@@ -48,12 +48,13 @@ async def console_chat():
                     )
                     print("AI: ", end="", flush=True)
                     async for chunk in response.aiter_text():
-                        print(
-                            Fore.LIGHTMAGENTA_EX + chunk + Style.RESET_ALL,
-                            end="",
-                            flush=True,
-                        )
-                        await asyncio.sleep(0.3)  # Simulate typing delay
+                        for char in chunk:
+                            print(
+                                Fore.LIGHTMAGENTA_EX + char + Style.RESET_ALL,
+                                end="",
+                                flush=True,
+                            )
+                            await asyncio.sleep(0.01)  # Typing delay
                     print()  # Newline after the complete response
                 else:
                     print(f"Error: Received status code {response.status_code}")
