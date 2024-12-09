@@ -18,7 +18,7 @@ async def generate(request: QuestionAnswerRequest, x_user_id: str = Header(...))
     # get answer from LLM (final format)
     response = await chat_manager.process_message(x_user_id, request.query)
 
-    return response.splitlines()
+    return "\n".join(response.splitlines())
 
 
 @router.post("/generate-stream")

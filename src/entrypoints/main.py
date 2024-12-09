@@ -53,7 +53,7 @@ async def console_chat():
                             end="",
                             flush=True,
                         )
-                        await asyncio.sleep(0.2)  # Simulate typing delay
+                        await asyncio.sleep(0.3)  # Simulate typing delay
                     print()  # Newline after the complete response
                 else:
                     print(f"Error: Received status code {response.status_code}")
