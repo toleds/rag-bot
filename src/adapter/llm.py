@@ -23,7 +23,7 @@ class LlmService:
         self.prompt_template = PromptTemplate.from_template(template)
         self.init_llm()
 
-    async def generate_response(self, messages: List[AnyMessage]):
+    def generate_response(self, messages: List[AnyMessage]):
         """
         QA the LLM
 
@@ -59,7 +59,7 @@ class LlmService:
         prompt = [SystemMessage(message_context.to_string())] + conversation_messages
 
         print(f"Sending to LLM to answer: {prompt}")
-        response = await self.llm.ainvoke(prompt)
+        response = self.llm.invoke(prompt)
 
         return response
 

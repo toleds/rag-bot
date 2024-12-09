@@ -2,25 +2,28 @@ from typing_extensions import Annotated
 
 from adapter import document_retriever, llm_service
 from langchain_core.tools import tool, InjectedToolArg
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, END, MessagesState
 from langgraph.prebuilt import ToolNode, tools_condition
 
 
 class GraphManager:
     def __init__(self):
-        pass
+        self.graph = None
+        self.memory = MemorySaver()
 
-    @staticmethod
-    async def initialize_graph():
+    async def initialize_graph_once(self):
+        if not self.graph:
+            self.graph = await self.initialize_graph()
+
+    async def get_graph(self):
+        await self.initialize_graph_once()
+        return self.graph
+
+    async def initialize_graph(self):
         # Step 1: Generate an AIMessage that may include a tool-call to be sent.
         def query_or_respond(state: MessagesState):
             """Generate tool call for retrieval or respond."""
-
-            # Extract the query from the latest message
-            human_message = state["messages"][-1]
-            print(f"Human Message: {human_message.content}")
-
-            # invoke tool
             llm_with_tools = llm_service.llm.bind_tools([retrieve_documents])
             response = llm_with_tools.invoke(state["messages"])
 
@@ -35,7 +38,6 @@ class GraphManager:
             Args:
                 query - Query string
             """
-            print(f"Query: {query}")
             documents = document_retriever.retrieve(query)
             serialized_documents = "\n\n".join(
                 (f"Source: {doc.metadata}\n" f"Content: {doc.page_content}")
@@ -48,8 +50,8 @@ class GraphManager:
         tools = ToolNode([retrieve_documents])
 
         # Step 3: generate LLM response
-        async def generate_response(state: MessagesState):
-            response = await llm_service.generate_response(state["messages"])
+        def generate_response(state: MessagesState):
+            response = llm_service.generate_response(state["messages"])
             return {"messages": [response]}
 
         # build grap workflows
@@ -62,9 +64,9 @@ class GraphManager:
         graph_builder.add_conditional_edges(
             "query_or_respond",
             tools_condition,
-            {END: END, "tools": "tools"},
+            {"tools": "tools", END: END},
         )
         graph_builder.add_edge("tools", "generate_response")
         graph_builder.add_edge("generate_response", END)
 
-        return graph_builder.compile()
+        return graph_builder.compile(checkpointer=self.memory)
