@@ -26,7 +26,7 @@ async def console_chat():
         while True:
             user_input = input("\nYou: ")
             if user_input.lower() in {"exit", "quit"}:
-                print("Goodbye!")
+                print(f"AI: {Fore.LIGHTMAGENTA_EX}  Goodbye! {Style.RESET_ALL}")
                 break
 
             # Send the input to the generate_stream endpoint
