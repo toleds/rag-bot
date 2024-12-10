@@ -22,14 +22,8 @@ class ChatManager:
 
         # get or create new session
         thread_id = self.get_conversation(user_id)
-        print(f"Thread Id: {thread_id}")
+        print(f"Conversation Thread Id: {thread_id}")
         config = {"configurable": {"thread_id": thread_id}}
-
-        # for step in graph_client.stream(
-        #         {"messages": [{"role": "user", "content": query}]},
-        #         stream_mode="values",
-        # ):
-        #     step["messages"][-1].pretty_print()
 
         # execute the graph workflow
         response = await graph_client.ainvoke(

@@ -1,7 +1,11 @@
-from langchain_community.llms.huggingface_hub import HuggingFaceHub
 from langchain_ollama import ChatOllama
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_openai import OpenAIEmbeddings, OpenAI
+from langchain_huggingface import (
+    HuggingFaceEmbeddings,
+    ChatHuggingFace,
+    HuggingFaceEndpoint,
+)
+from langchain_openai import ChatOpenAI
+from langchain_openai import OpenAIEmbeddings
 
 
 def get_embedding_model(
@@ -72,7 +76,7 @@ def get_openai_llm(model_name: str):
     :param model_name:
     :return:
     """
-    return OpenAI(model_name=model_name)
+    return ChatOpenAI(model_name=model_name)
 
 
 def get_hugging_face_llm(model_name: str):
@@ -82,7 +86,9 @@ def get_hugging_face_llm(model_name: str):
     :param model_name:
     :return:
     """
-    return HuggingFaceHub(repo_id=model_name)
+    llm = HuggingFaceEndpoint(repo_id=model_name)
+
+    return ChatHuggingFace(llm=llm)
 
 
 def get_ollama_llm(model_name: str, local_server: str):

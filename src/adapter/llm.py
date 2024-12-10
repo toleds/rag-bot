@@ -14,8 +14,10 @@ class LlmService:
 
         template = """
         You are an assistant for question-answering tasks. 
-        Use ONLY the following pieces of context below to answer the question and DO NOT add any information outside of it.  
-        If context information provided is missing, just say you don't know, don't make up an answer.
+        Use ONLY the following pieces of context below to answer the question in detail and DO NOT add any information outside of 
+        it.   
+        
+        If context information provided is missing, just say you don't know, don't make up an answer.        
         
         {context}
         """
@@ -58,10 +60,8 @@ class LlmService:
         # form the prompt to send to llm
         prompt = [SystemMessage(message_context.to_string())] + conversation_messages
 
-        print(f"Sending to LLM to answer: {prompt}")
-        response = self.llm.invoke(prompt)
-
-        return response
+        print(f"Getting Answer from LLM: {prompt}")
+        return self.llm.invoke(prompt)
 
     def init_llm(self):
         # Initialize the language model (OpenAI for QA)
