@@ -3,7 +3,7 @@ import shutil
 from fastapi.background import BackgroundTasks
 
 from adapter import document_retriever, llm_service
-from common import file_utils
+from common import loaders
 from config import config
 
 from fastapi import UploadFile, File, APIRouter, HTTPException, status
@@ -67,21 +67,52 @@ async def add_document(background_tasks: BackgroundTasks, file: UploadFile = Fil
 
     return JSONResponse(
         content={
-            "message": "Documents uploaded successfully.  Document embedding ongoing and will be available in a while."
+            "message": "Documents extraction ongoing.  Document embedding ongoing and will be available in a while."
         },
         status_code=status.HTTP_202_ACCEPTED,
     )
 
 
-async def _process_document(file_extension: str, file_path: str):
-    document = (
-        file_utils.extract_text_from_file(file_path=file_path)
-        if "txt" in file_extension
-        else file_utils.extract_text_from_pdf(pdf_path=file_path)
+@router.post("/add-web-pages")
+async def add_web_pages(background_tasks: BackgroundTasks, root_url: str):
+    """
+
+    :param root_url:
+    :param background_tasks:
+    :return:
+    """
+    # Schedule background processing
+    background_tasks.add_task(_process_document, "html", root_url)
+
+    return JSONResponse(
+        content={
+            "message": "Webpages extraction ongoing.  Document embedding ongoing and will be available in a while."
+        },
+        status_code=status.HTTP_202_ACCEPTED,
     )
 
-    print(f"Document {file_path} adding to the queue.")
-    await document_retriever.add_documents(document)
+
+async def _process_document(file_extension: str, path: str):
+    """
+
+    :param file_extension:
+    :param path:
+    :return:
+    """
+    if "txt" in file_extension:
+        documents = loaders.load_text_file(file_path=path)
+    elif "pdf" in file_extension:
+        documents = loaders.load_pdf(pdf_path=path)
+    elif "html" in file_extension:
+        documents = loaders.load_web_url(path)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"The file extension is not valid.: {file_extension}",
+        )
+
+    print(f"Document {path} adding to the queue.")
+    await document_retriever.add_documents(documents)
 
 
 @router.post("/switch-collection")
