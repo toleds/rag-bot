@@ -73,7 +73,7 @@ def load_web_url(root_url: str) -> List[Document]:
     """
     Extracts text from a web urls text file, splits it into chunks, and returns a list of text chunks.
 
-    :param urls:
+    :param root_url:
     :return:
     """
 

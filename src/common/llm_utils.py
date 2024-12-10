@@ -56,7 +56,7 @@ def get_openai_embedding(
 
     :return:
     """
-    return OpenAIEmbeddings(model=embedding_model)  # default embedding model
+    return OpenAIEmbeddings()  # default embedding model
 
 
 def get_huggingface_embedding(
