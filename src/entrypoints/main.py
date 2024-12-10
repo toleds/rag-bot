@@ -48,6 +48,9 @@ async def console_chat():
                     )
                     print("AI: ", end="", flush=True)
                     async for chunk in response.aiter_text():
+                        chunk = chunk.replace(
+                            "\\n", "\n"
+                        )  # Convert escaped newlines to actual newlines
                         for char in chunk:
                             print(
                                 Fore.LIGHTMAGENTA_EX + char + Style.RESET_ALL,

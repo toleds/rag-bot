@@ -14,8 +14,8 @@ class LlmService:
 
         template = """
         You are an assistant for question-answering tasks. 
-        Use ONLY the following pieces of context below to answer the question in detail and DO NOT add any information outside of 
-        it.   
+        Use ONLY the following piece of context below to answer the question in detail and DO NOT add any information outside of 
+        it. Can you provide information about the \"document name\" and  \"page\" at the end of your response as references.  
         
         If context information provided is missing, just say you don't know, don't make up an answer.        
         

@@ -100,7 +100,6 @@ class DocumentRetriever:
         # Split the documents into batches
         num_batches = math.ceil(len(documents) / batch_size)
         print(f"Total batches to add: {num_batches}")
-        tasks = []
 
         for i in range(num_batches):
             start = i * batch_size
@@ -112,12 +111,12 @@ class DocumentRetriever:
                 print(
                     f"Adding batch {i + 1}/{num_batches} with {len(batch)} chunks on collection {self.vector_store._collection_name}."
                 )
-                tasks.append(self.vector_store.aadd_documents(batch))
+
+                self.vector_store.add_documents(batch)
                 print(f"Batch {i + 1}/{num_batches} with {len(batch)} chunks added.")
             except Exception as e:
                 print(f"Exception: {e}")
 
-        await asyncio.gather(*tasks)
         print("Document batches added.")
 
     def retrieve(self, query: str):
@@ -128,12 +127,6 @@ class DocumentRetriever:
         """
 
         documents = self.vector_store_retriever.invoke(query)
-
-        # if not documents:
-        #     raise HTTPException(
-        #         status_code=404,
-        #         detail="No similar documents found.  Kindly refine your query.",
-        #     )
 
         return documents
 
