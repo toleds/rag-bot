@@ -139,7 +139,7 @@ class DocumentRetriever:
         )
 
         self.vector_store_retriever = self.vector_store.as_retriever(
-            search_type="similarity",
+            search_type="mmr",
             search_kwargs={"k": 10},
         )
 

@@ -13,14 +13,17 @@ class LlmService:
         self.llm = None
 
         template = """
-        You are an assistant for question-answering tasks. 
-        Use ONLY the following piece of context below to answer the question and DO NOT add any information outside of 
-        it. Provide detailed information and mention the \"document source\" and  \"page number\" if present at the end of 
+        You are a helpful assistant. 
+                
+        Provide detailed information and mention the \"document source\" and  \"page number\" if present at the end of 
         your response for references.  
-               
-        If context information provided is missing, just say you don't know, don't make up an answer.        
         
-        {context}
+        If response contains tables, make sure to return in a consistent format such as a Markdown table or a simple text table.
+               
+        Use ONLY the following piece of context below to answer the question and DO NOT add any information outside of 
+        it. If context information provided is missing, just say you don't know, don't make up an answer.        
+        
+        Context: {context}
         """
 
         self.prompt_template = PromptTemplate.from_template(template)

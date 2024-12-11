@@ -117,7 +117,7 @@ async def _extract_tables_from_pdf(pdf_path: str):
             table_text = table.df.to_markdown()  # Convert table to Markdown
             tables_as_text.append(
                 {
-                    "content": table_text,
+                    "content": table_text.strip(),
                     "type": "table",
                     "page": table.page,
                     "source": pdf_path,
