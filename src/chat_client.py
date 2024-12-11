@@ -7,26 +7,29 @@ import httpx
 # Console-based chat interaction
 async def console_chat():
     print("Welcome to the RAG-Bot Console! Type 'bye' to quit.")
+    print("=============================================================")
+    user_name = green_input("Please enter your name: ")
+
     async with httpx.AsyncClient() as client:
-        await chat_with_qwen("Introduce yourself Qwen.", client)
+        await chat_with_qwen(f"Hello I'm {user_name}", user_name, client)
 
         while True:
-            user_input = green_input("You: ")
+            user_input = green_input(f"{user_name}: ")
 
-            await chat_with_qwen(user_input, client)
+            await chat_with_qwen(user_input, user_name, client)
 
             if user_input.lower() in {"bye"}:
                 print(f"{Fore.LIGHTRED_EX}Session Closed!{Style.RESET_ALL}")
                 break
 
 
-async def chat_with_qwen(user_input: str, client):
+async def chat_with_qwen(user_input: str, user_name: str, client):
     # Send the input to the generate_stream endpoint
     try:
         print("=============================================================")
         response = await client.post(
             "http://localhost:8000/v1/generate-stream",
-            headers={"x-user-id": "console_user"},
+            headers={"x-user-id": user_name},
             json={"query": user_input},
             timeout=None,  # Allow indefinite streaming
         )
