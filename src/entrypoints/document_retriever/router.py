@@ -100,11 +100,11 @@ async def _process_document(file_extension: str, path: str):
     :return:
     """
     if "txt" in file_extension:
-        documents = loaders.load_text_file(file_path=path)
+        documents = await loaders.load_text_file(file_path=path)
     elif "pdf" in file_extension:
-        documents = loaders.load_pdf(pdf_path=path)
+        documents = await loaders.load_pdf(pdf_path=path)
     elif "html" in file_extension:
-        documents = loaders.load_web_url(path)
+        documents = await loaders.load_web_url(path)
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -23,7 +23,7 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 
 
-def load_pdf(pdf_path: str) -> List[Document]:
+async def load_pdf(pdf_path: str) -> List[Document]:
     """
     Extracts text from a PDF file, splits the text from each page into chunks, and returns a list of text chunks.
 
@@ -35,7 +35,7 @@ def load_pdf(pdf_path: str) -> List[Document]:
 
     # Load the file
     loader = PyPDFLoader(pdf_path)
-    documents = loader.load()
+    documents = await loader.aload()
 
     # Split the text into chunks
     text_chunks = text_splitter.split_documents(documents)
@@ -46,7 +46,7 @@ def load_pdf(pdf_path: str) -> List[Document]:
     return text_chunks
 
 
-def load_text_file(file_path: str) -> List[Document]:
+async def load_text_file(file_path: str) -> List[Document]:
     """
     Extracts text from a plain text file, splits it into chunks, and returns a list of text chunks.
 
@@ -58,7 +58,7 @@ def load_text_file(file_path: str) -> List[Document]:
 
     # Load the file
     loader = TextLoader(file_path)
-    documents = loader.load()
+    documents = await loader.aload()
 
     # Split the text into chunks
     text_chunks = text_splitter.split_documents(documents)
@@ -69,7 +69,7 @@ def load_text_file(file_path: str) -> List[Document]:
     return text_chunks
 
 
-def load_web_url(root_url: str) -> List[Document]:
+async def load_web_url(root_url: str) -> List[Document]:
     """
     Extracts text from a web urls text file, splits it into chunks, and returns a list of text chunks.
 
@@ -85,11 +85,12 @@ def load_web_url(root_url: str) -> List[Document]:
     pages = RecursiveUrlLoader(
         url=root_url, max_depth=5, prevent_outside=True, extractor=bs4_extractor
     )
-    documents = []
 
     print("Collecting documents from web pages.....")
-    for doc in pages.lazy_load():
-        documents.append(doc)
+    documents = await pages.aload()
+
+    # for doc in pages.alazy_load():
+    #     documents.append(doc)
 
     # Split the text into chunks
     text_chunks = text_splitter.split_documents(documents)

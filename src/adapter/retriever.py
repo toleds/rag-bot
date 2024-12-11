@@ -112,7 +112,7 @@ class DocumentRetriever:
                     f"Adding batch {i + 1}/{num_batches} with {len(batch)} chunks on collection {self.vector_store._collection_name}."
                 )
 
-                self.vector_store.add_documents(batch)
+                await self.vector_store.aadd_documents(batch)
                 print(f"Batch {i + 1}/{num_batches} with {len(batch)} chunks added.")
             except Exception as e:
                 print(f"Exception: {e}")
