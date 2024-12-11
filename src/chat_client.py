@@ -1,6 +1,6 @@
 import asyncio
 
-from colorama import Fore, Style
+from colorama import Fore, Style, Back
 import httpx
 
 
@@ -14,7 +14,9 @@ async def console_chat():
         await chat_with_qwen(f"Hello I'm {user_name}", user_name, client)
 
         while True:
-            user_input = green_input(f"{user_name}: ")
+            user_input = green_input(
+                f"{Back.LIGHTCYAN_EX}{Fore.BLACK}{user_name}:{Style.RESET_ALL} "
+            )
 
             await chat_with_qwen(user_input, user_name, client)
 
@@ -36,7 +38,11 @@ async def chat_with_qwen(user_input: str, user_name: str, client):
 
         # Check if the response is streaming
         if response.status_code == 200:
-            print("Qwen: ", end="", flush=True)
+            print(
+                f"{Back.LIGHTCYAN_EX}{Fore.BLACK}Qwen:{Style.RESET_ALL} ",
+                end="",
+                flush=True,
+            )
             async for chunk in response.aiter_text():
                 chunk = chunk.replace(
                     "\\n", "\n"
