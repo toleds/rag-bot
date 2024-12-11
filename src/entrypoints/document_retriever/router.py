@@ -102,7 +102,7 @@ async def _process_document(file_extension: str, path: str):
     if "txt" in file_extension:
         documents = await loaders.load_text_file(file_path=path)
     elif "pdf" in file_extension:
-        documents = await loaders.load_pdf(pdf_path=path)
+        documents = await loaders.load_pdf_with_tables(pdf_path=path)
     elif "html" in file_extension:
         documents = await loaders.load_web_url(path)
     else:

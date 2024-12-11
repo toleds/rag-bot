@@ -15,9 +15,9 @@ class LlmService:
         template = """
         You are an assistant for question-answering tasks. 
         Use ONLY the following piece of context below to answer the question and DO NOT add any information outside of 
-        it. Provide concise overview or brief summary and mention the \"document source\" and  \"page number\" if present at the end of 
-        your response as references.  
-        
+        it. Provide detailed information and mention the \"document source\" and  \"page number\" if present at the end of 
+        your response for references.  
+               
         If context information provided is missing, just say you don't know, don't make up an answer.        
         
         {context}
