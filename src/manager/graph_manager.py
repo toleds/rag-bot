@@ -23,7 +23,7 @@ class GraphManager:
         def query_or_respond(state: MessagesState):
             """Generate tool call for retrieval or respond."""
             llm_with_tools = llm_service.llm.bind_tools([retrieve_documents])
-            response = llm_with_tools.invoke(state["messages"])
+            response = llm_with_tools.invoke(state["messages"][-10:])
 
             # MessagesState appends messages to state instead of overwriting
             return {"messages": [response]}
@@ -49,7 +49,7 @@ class GraphManager:
 
         # Step 3: generate LLM response
         def generate_response(state: MessagesState):
-            response = llm_service.generate_response(state["messages"])
+            response = llm_service.generate_response(state["messages"][-10:])
             return {"messages": [response]}
 
         # build grap workflows
