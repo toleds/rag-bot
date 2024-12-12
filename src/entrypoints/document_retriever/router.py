@@ -37,6 +37,18 @@ def similarity_search(query: str):
     )
 
 
+@router.post("/load-pdf")
+async def load_pdf(file: UploadFile = File(...)):
+    file_path = f"{config.vector_store.resource_path}/{file.filename}"
+    with open(
+        file_path,
+        "wb",
+    ) as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return await loaders._extract_tables_from_pdf(file_path)
+
+
 @router.post("/add-document")
 async def add_document(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     """

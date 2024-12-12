@@ -80,7 +80,7 @@ async def load_pdf_with_tables(pdf_path: str) -> List[Document]:
     except Exception as e:
         print(e)
 
-    return documents
+    return text_splitter.split_documents(documents)
 
 
 async def _extract_text_from_pdf(pdf_path: str):
@@ -111,7 +111,7 @@ async def _extract_tables_from_pdf(pdf_path: str):
 
     try:
         # Extract all tables from all pages at once
-        tables = camelot.read_pdf(pdf_path, pages="1-end")
+        tables = camelot.read_pdf(pdf_path, pages="all")
 
         for table in tables:
             table_text = table.df.to_markdown()  # Convert table to Markdown
