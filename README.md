@@ -159,3 +159,6 @@ python -m main.py
 
 Go to http://localhost:8000/docs
 
+
+GhostScript - camelot dependency https://ghostscript.com/releases/gsdnld.html
+

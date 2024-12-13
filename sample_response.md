@@ -1,46 +1,14 @@
-Certainly! Here are some key pieces of information about Synpulse:
+Certainly! Below is the history of changes for the **Vault Installation Tools.pdf** document, extracted from the provided context:
 
-### About Synpulse
+### Vault Installation Tools History
+| Version | Date       | Author              | Changes                                                                                                                                                                                                                                            | Page |
+|---------|------------|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------|
+| 11.1    | 05/10/2020 | R Tweed             | General review, comments added.                                                                                                                                                                                                                     | 46   |
+| 11.2    | 05/10/2020 | A O’Neill           | Editorial review and comments/changes discussed and resolved.                                                                                                                                                                                      | 46   |
+| 11.2    | 06/10/2020 | H Tonddast-Navaei   | Approved.                                                                                                                                                                                                                                           | 46   |
+| 12      | 07/10/2020 | A O’Neill           | Versioning updated to reflect approval.                                                                                                                                                                      | 46   |
+| 12.1    | 28/10/2020 | J Davey             | Additions to install-vault, install-vault and check-vault flags added, blue/green setup expanded and other general changes.                                                                                                                         | 46   |
+| 12.2    | 29/10/2020 | J Davey             | Editorial changes to installation steps and blu                                                              | 46   |
+| 15.1    | 10/02/2021 | L Hurt              | Updated with revised Terminology and copyright.                                                                                                                                                                                                     | 46   |
 
-**Company Overview:**
-- **Synpulse** is an internationally established management consulting company and a valued partner to many of the world's largest financial services providers.
-- Founded in 1996, Synpulse supports banks and insurers along the entire value chain, from the development of strategies and their operative realization to technical implementation and hand-over.
-
-**Global Presence:**
-- Synpulse operates in multiple regions, including:
-    - **Switzerland:** Zurich, Geneva
-    - **Germany:** Düsseldorf
-    - **Asia:** Singapore, New York, Hong Kong, London, Sydney, Bratislava, Manila, Jakarta, Hyderabad, Bangkok
-
-**Expertise and Services:**
-- Synpulse is characterized by in-depth industry knowledge and the passion and commitment of its more than 700 employees from over 20 countries.
-- The company offers a range of services and solutions, including:
-    - **Consulting:** Strategy development, operational improvement, and technical implementation.
-    - **Design:** Creating innovative digital experiences.
-    - **Engineering:** Technical solutions and hand-over support.
-
-**Synpulse8:**
-- Synpulse8 is a technology powerhouse launched to supercharge the financial services industry's rapid demand for digital transformation.
-- The company combines consulting, design, and engineering to offer comprehensive digital solutions.
-
-**Key Contacts:**
-- **APAC:**
-    - **Rhea Concepcion**
-    - Email: Rhea.Concepcion@synpulse.com
-- **EUUS:**
-    - **Lisa Benjamin**
-    - Email: Lisa.Benjamin@synpulse.com
-
-### Latest News and Insights:
-- **Synpulse and VR VSC eG Successfully Implement AI-Powered Seizure Automation:** This highlights Synpulse's capability in leveraging advanced technologies to deliver innovative solutions.
-- **Virtual Banking: Why Thinking Ahead Will Help Banks to Stay Ahead:** Discusses the importance of forward-thinking strategies in the context of virtual banking.
-
-### Legal and Privacy:
-- **Terms of Use:** Synpulse8.com is comprised of various global, country, regional, and practice-specific information, and users must agree to the Terms of Use.
-- **Privacy Notice:** Synpulse is committed to protecting user information and provides a detailed privacy notice explaining how data is collected, used, and shared.
-
-### Website and Resources:
-- For more information, you can visit the official website: [synpulse.com](https://synpulse.com)
-- The company also provides insights and news on various topics related to data, analytics, and digital transformation on their [Insights page](https://synpulse8.com/insights).
-
-**Document Source:** [Synpulse8 Website](https://synpulse8.com), [Synpulse8 Insights](https://synpulse8.com/insights), [Synpulse8 Contact](https://synpulse8.com/contact-us)
+This table provides a detailed history of the changes made to the **Vault Installation Tools.pdf** document, including the version, date, author, and a brief description of the changes.   
