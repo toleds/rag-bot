@@ -80,7 +80,7 @@ async def load_pdf_with_tables(pdf_path: str) -> List[Document]:
     except Exception as e:
         print(e)
 
-    return text_splitter.split_documents(documents)
+    return documents
 
 
 async def _extract_text_from_pdf(pdf_path: str):
@@ -171,9 +171,6 @@ async def load_web_url(root_url: str) -> List[Document]:
 
     print("Collecting documents from web pages.....")
     documents = await pages.aload()
-
-    # for doc in pages.alazy_load():
-    #     documents.append(doc)
 
     # Split the text into chunks
     text_chunks = text_splitter.split_documents(documents)
