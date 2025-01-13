@@ -1,3 +1,5 @@
+from mangum import Mangum
+
 import middleware
 
 from entrypoints.router.v1 import router
@@ -12,6 +14,9 @@ app.include_router(router.router)
 
 # Configure middleware
 middleware.configure(app)
+
+# handler for lambda deployment
+handler = Mangum(app)
 
 if __name__ == "__main__":
     import uvicorn
